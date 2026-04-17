@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pancham</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- Sign-in overlay -->
+<div id="sign-in-overlay" class="sign-in-overlay">
+  <div class="sign-in-card">
+    <h1>Pancham</h1>
+    <p>Write Hindustani classical music notations in the Bhatkhande system.</p>
+    <form id="auth-form" class="auth-form">
+      <input type="email" id="auth-email" placeholder="Email" required>
+      <input type="password" id="auth-password" placeholder="Password" required minlength="6">
+      <div class="auth-buttons">
+        <button type="submit" id="auth-signin-btn" class="sign-in-btn">Sign in</button>
+        <button type="button" id="auth-signup-btn" class="sign-up-btn">Sign up</button>
+      </div>
+      <div id="auth-error" class="auth-error"></div>
+    </form>
+  </div>
+</div>
+
+<div id="app-shell">
+  <aside id="sidebar" class="sidebar no-print">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Library</span>
+      <div class="sidebar-actions">
+        <button id="sidebar-new-file" title="New notation">+</button>
+        <button id="sidebar-new-folder" title="New folder">&#128193;+</button>
+      </div>
+    </div>
+    <div id="file-tree"></div>
+    <div class="sidebar-footer">
+      <button id="sign-out-btn">Sign out</button>
+    </div>
+  </aside>
+
+  <div id="main-content">
+    <header class="toolbar no-print">
+      <h1>Pancham</h1>
+      <div class="toolbar-actions">
+        <span id="sync-status" class="sync-status"></span>
+        <button id="add-section">+ Section</button>
+        <button id="export-json">Export JSON</button>
+        <label class="file-label">Import<input type="file" id="import-json" accept=".json"></label>
+        <button id="toggle-render">Render</button>
+        <button id="export-pdf">Export PDF</button>
+        <button id="reset-file" class="danger">Reset</button>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="meta">
+        <input id="title" placeholder="Composition Title" class="meta-title">
+        <div class="meta-row">
+          <label>Raga <input id="raga" placeholder="e.g. Yaman"></label>
+          <label>Taal <select id="taal">
+            <option value="teentaal">Teentaal (16)</option>
+            <option value="teentaal_khali">Teentaal - from Khali (16)</option>
+          </select></label>
+          <label class="meta-laya">Laya <input id="laya" placeholder="Madhya / Vilambit"></label>
+          <label class="meta-bpm">BPM <input id="bpm" type="number" placeholder="e.g. 80"></label>
+        </div>
+      </div>
+
+      <div id="sections"></div>
+
+      <div class="notes-section">
+        <textarea id="notes" placeholder="Notes..." rows="3"></textarea>
+      </div>
+
+      <div class="legend no-print">
+        <strong>Input cheatsheet:</strong>
+        <code>S R G M P D N</code> shudh ·
+        <code>r g d n</code> komal (underline) ·
+        <code>M'</code> tivra Ma (overline) ·
+        <code>.S</code> mandra (dot below) ·
+        <code>^S</code> taar (dot above) ·
+        <code>-</code> or <code>s</code> sustain (ऽ) ·
+        space = new swara in same matra ·
+        Tab = next cell
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="drive.js"></script>
+<script src="sidebar.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
