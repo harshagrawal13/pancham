@@ -1,3 +1,69 @@
+// ── DIALOG HELPERS (replaces native prompt/confirm/alert) ──
+
+function showDialog({ title = '', message = '', initialValue = null, placeholder = '', okText = 'OK', cancelText = 'Cancel', danger = false }) {
+  const wantsInput = initialValue !== null;
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('dialog-overlay');
+    const titleEl = document.getElementById('dialog-title');
+    const msgEl = document.getElementById('dialog-message');
+    const input = document.getElementById('dialog-input');
+    const okBtn = document.getElementById('dialog-ok');
+    const cancelBtn = document.getElementById('dialog-cancel');
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    input.classList.toggle('hidden', !wantsInput);
+    input.value = wantsInput ? initialValue : '';
+    input.placeholder = placeholder;
+    okBtn.textContent = okText;
+    cancelBtn.textContent = cancelText;
+    okBtn.classList.toggle('danger', danger);
+
+    overlay.classList.remove('hidden');
+    if (wantsInput) {
+      setTimeout(() => { input.focus(); input.select(); }, 0);
+    } else {
+      setTimeout(() => okBtn.focus(), 0);
+    }
+
+    const cleanup = () => {
+      overlay.classList.add('hidden');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onKey);
+      overlay.removeEventListener('mousedown', onOutside);
+    };
+    const onOk = () => {
+      if (wantsInput) {
+        const v = input.value.trim();
+        if (!v) { input.focus(); return; }
+        cleanup(); resolve(v);
+      } else {
+        cleanup(); resolve(true);
+      }
+    };
+    const onCancel = () => { cleanup(); resolve(wantsInput ? null : false); };
+    const onKey = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onOk(); }
+      else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+    };
+    const onOutside = (e) => { if (e.target === overlay) onCancel(); };
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    document.addEventListener('keydown', onKey);
+    overlay.addEventListener('mousedown', onOutside);
+  });
+}
+
+function showPrompt(title, { initialValue = '', placeholder = '', okText = 'OK' } = {}) {
+  return showDialog({ title, initialValue, placeholder, okText });
+}
+
+function showConfirm(title, { message = '', okText = 'OK', danger = false } = {}) {
+  return showDialog({ title, message, okText, danger });
+}
+
 // ── SIDEBAR FILE TREE ───────────────────────────────────
 
 const fileTree = {
@@ -142,7 +208,7 @@ function closeContextMenu() {
 }
 
 async function renameItem(item, isFolder, parentFolderId) {
-  const newName = prompt('Rename to:', item.name);
+  const newName = await showPrompt('Rename', { initialValue: item.name, okText: 'Rename' });
   if (!newName || newName === item.name) return;
 
   try {
@@ -158,7 +224,12 @@ async function renameItem(item, isFolder, parentFolderId) {
 }
 
 async function deleteItem(item, isFolder, parentFolderId) {
-  if (!confirm(`Delete "${item.name}"?`)) return;
+  const ok = await showConfirm(`Delete "${item.name}"?`, {
+    message: isFolder ? 'The folder and everything inside it will be deleted.' : 'This notation will be permanently deleted.',
+    okText: 'Delete',
+    danger: true,
+  });
+  if (!ok) return;
 
   try {
     if (isFolder) {
@@ -192,7 +263,7 @@ async function sidebarCreateFile() {
 
 async function sidebarCreateFolder() {
   const parentId = fileTree.selectedFolderId || null;
-  const name = prompt('Folder name:');
+  const name = await showPrompt('New folder', { placeholder: 'Folder name', okText: 'Create' });
   if (!name) return;
 
   try {

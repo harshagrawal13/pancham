@@ -23,6 +23,7 @@ const state = {
   title: '',
   raga: '',
   taal: 'teentaal',
+  samOffset: 1,
   laya: '',
   bpm: '',
   notes: '',
@@ -131,7 +132,10 @@ function renderSection(si, sec) {
   const tableWrap = document.createElement('div');
   tableWrap.className = 'section-table';
 
-  const markers = `<div class="taal-markers">${taal.markers.map(m =>
+  // Rotate markers so that X lands on matra `samOffset` (1-indexed).
+  const offset = (Math.max(1, Math.min(taal.matras, state.samOffset || 1)) - 1);
+  const rotated = taal.markers.map((_, i) => taal.markers[(i - offset + taal.matras) % taal.matras]);
+  const markers = `<div class="taal-markers">${rotated.map(m =>
     `<div class="taal-cell">${m}</div>`).join('')}</div>`;
   const nums = `<div class="matra-row">${Array.from({length: taal.matras}, (_, i) =>
     `<div class="matra-cell">${i+1}</div>`).join('')}</div>`;
@@ -293,12 +297,14 @@ function focusCell(si, li, ci) {
 // ── SAVE / LOAD ─────────────────────────────────────────
 
 function save() {
+  const samOffsetRaw = parseInt(document.getElementById('sam-offset').value, 10);
   const meta = {
     title: document.getElementById('title').value,
     raga: document.getElementById('raga').value,
     laya: document.getElementById('laya').value,
     bpm: document.getElementById('bpm').value,
     taal: document.getElementById('taal').value,
+    samOffset: Number.isFinite(samOffsetRaw) ? samOffsetRaw : 1,
     notes: document.getElementById('notes').value,
   };
   Object.assign(state, meta);
@@ -314,8 +320,10 @@ function updateEmptyClasses() {
   const laya = document.getElementById('laya').value.trim();
   const bpm = document.getElementById('bpm').value.trim();
   const notes = document.getElementById('notes').value.trim();
+  const samOffset = parseInt(document.getElementById('sam-offset').value, 10) || 1;
   document.querySelector('.meta-laya').classList.toggle('empty', !laya);
   document.querySelector('.meta-bpm').classList.toggle('empty', !bpm);
+  document.querySelector('.meta-sam').classList.toggle('empty', samOffset === 1);
   document.querySelector('.notes-section').classList.toggle('empty', !notes);
 }
 
@@ -329,6 +337,7 @@ function loadStateToDOM() {
   document.getElementById('laya').value = state.laya || '';
   document.getElementById('bpm').value = state.bpm || '';
   document.getElementById('taal').value = state.taal || 'teentaal';
+  document.getElementById('sam-offset').value = state.samOffset || 1;
   document.getElementById('notes').value = state.notes || '';
   updateEmptyClasses();
 }
@@ -337,6 +346,7 @@ function clearEditor() {
   state.title = '';
   state.raga = '';
   state.taal = 'teentaal';
+  state.samOffset = 1;
   state.laya = '';
   state.bpm = '';
   state.notes = '';
@@ -420,7 +430,7 @@ async function createNewFile(parentFolderId) {
 }
 
 async function saveToDrive() {
-  if (!currentFileId || !isSignedIn() || isSaving) return;
+  if (!currentFileId || !currentUsername || isSaving) return;
   isSaving = true;
   isDirty = false;
 
@@ -440,6 +450,37 @@ async function saveToDrive() {
   }
 }
 
+// First-edit bootstrap: if the user starts typing before picking a file from the
+// sidebar, create a notation row on their behalf using the current editor state,
+// then let saveToDrive take over for subsequent edits.
+async function autoCreateCurrentState() {
+  if (!currentUsername || currentFileId || isSaving) return;
+  isSaving = true;
+  isDirty = false;
+  const title = state.title || 'Untitled';
+  showSyncStatus('Saving...');
+  try {
+    const file = await driveCreateFile(title, null, state);
+    currentFileId = file.id;
+    currentFileName = file.name;
+    localStorage.setItem(`sargam_${file.id}`, JSON.stringify(state));
+    localStorage.setItem('sargam_current_file', file.id);
+    localStorage.removeItem('sargam');
+    showSyncStatus('Saved');
+    setTimeout(() => {
+      const el = document.getElementById('sync-status');
+      if (el.textContent === 'Saved') showSyncStatus('');
+    }, 2000);
+    if (typeof loadFolder === 'function') await loadFolder('root');
+  } catch (err) {
+    isDirty = true;
+    showSyncStatus('Save failed', true);
+    console.error('Auto-create error:', err);
+  } finally {
+    isSaving = false;
+  }
+}
+
 function showSyncStatus(text, isError) {
   const el = document.getElementById('sync-status');
   el.textContent = text;
@@ -449,9 +490,9 @@ function showSyncStatus(text, isError) {
 function startAutoSave() {
   if (autoSaveTimer) clearInterval(autoSaveTimer);
   autoSaveTimer = setInterval(() => {
-    if (isDirty && currentFileId && isSignedIn() && !isSaving) {
-      saveToDrive();
-    }
+    if (!currentUsername || isSaving || !isDirty) return;
+    if (currentFileId) saveToDrive();
+    else autoCreateCurrentState();
   }, 5000);
 }
 
@@ -461,7 +502,7 @@ function handleTitleChange() {
   save();
   clearTimeout(titleRenameTimer);
   titleRenameTimer = setTimeout(async () => {
-    if (currentFileId && state.title && isSignedIn()) {
+    if (currentFileId && state.title && currentUsername) {
       try {
         await dbRenameNotation(currentFileId, state.title);
         currentFileName = state.title;
@@ -479,18 +520,17 @@ function handleTitleChange() {
 
 document.addEventListener('DOMContentLoaded', () => {
   const signInOverlay = document.getElementById('sign-in-overlay');
-  const authForm = document.getElementById('auth-form');
-  const authEmail = document.getElementById('auth-email');
-  const authPassword = document.getElementById('auth-password');
+  const usernameForm = document.getElementById('username-form');
+  const usernameInput = document.getElementById('username-input');
   const authError = document.getElementById('auth-error');
-  const authSignInBtn = document.getElementById('auth-signin-btn');
-  const authSignUpBtn = document.getElementById('auth-signup-btn');
+  const currentUsernameEl = document.getElementById('current-username');
 
   initSupabase();
 
-  async function onSignedIn() {
+  async function onReady() {
     signInOverlay.classList.add('hidden');
     authError.textContent = '';
+    currentUsernameEl.textContent = currentUsername;
 
     await initSidebar();
 
@@ -547,52 +587,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function boot() {
-    const hasSession = await checkSession();
-    if (hasSession) {
-      await onSignedIn();
+    if (loadUsername()) {
+      await onReady();
     }
 
-    // Auth form: sign in
-    authForm.addEventListener('submit', async (e) => {
+    usernameForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      authError.textContent = '';
-      authSignInBtn.disabled = true;
+      const name = usernameInput.value.trim();
+      if (!name) return;
+      setUsername(name);
       try {
-        await signInWithEmail(authEmail.value, authPassword.value);
-        await onSignedIn();
+        await onReady();
       } catch (err) {
-        authError.textContent = err.message || 'Sign in failed';
-      } finally {
-        authSignInBtn.disabled = false;
-      }
-    });
-
-    // Auth form: sign up
-    authSignUpBtn.addEventListener('click', async () => {
-      authError.textContent = '';
-      if (!authEmail.value || !authPassword.value) {
-        authError.textContent = 'Enter email and password';
-        return;
-      }
-      if (authPassword.value.length < 6) {
-        authError.textContent = 'Password must be at least 6 characters';
-        return;
-      }
-      authSignUpBtn.disabled = true;
-      try {
-        await signUpWithEmail(authEmail.value, authPassword.value);
-        // Some Supabase configs auto-sign-in after signup
-        const hasSession = await checkSession();
-        if (hasSession) {
-          await onSignedIn();
-        } else {
-          authError.textContent = 'Check your email to confirm signup, then sign in.';
-          authError.style.color = '#4a4';
-        }
-      } catch (err) {
-        authError.textContent = err.message || 'Sign up failed';
-      } finally {
-        authSignUpBtn.disabled = false;
+        authError.textContent = err.message || 'Failed to load';
       }
     });
   }
@@ -604,6 +611,10 @@ document.addEventListener('DOMContentLoaded', () => {
   ['raga','laya','bpm','taal','notes'].forEach(id => {
     document.getElementById(id).addEventListener('input', save);
   });
+
+  // Sam offset rotates markers — needs a full re-render
+  document.getElementById('sam-offset').addEventListener('input', () => { save(); render(); });
+  document.getElementById('taal').addEventListener('change', () => { save(); render(); });
 
   document.getElementById('title').addEventListener('input', handleTitleChange);
 
@@ -642,17 +653,23 @@ document.addEventListener('DOMContentLoaded', () => {
         loadStateToDOM();
         render();
         save();
-      } catch { alert('Invalid JSON'); }
+      } catch { showConfirm('Invalid JSON', { message: 'The selected file could not be parsed.', okText: 'OK' }); }
     };
     r.readAsText(f);
     e.target.value = '';
   });
 
-  document.getElementById('reset-file').addEventListener('click', () => {
-    if (!confirm('Reset this file? All content will be cleared.')) return;
+  document.getElementById('reset-file').addEventListener('click', async () => {
+    const ok = await showConfirm('Reset this file?', {
+      message: 'All content will be cleared. This cannot be undone.',
+      okText: 'Reset',
+      danger: true,
+    });
+    if (!ok) return;
     state.title = '';
     state.raga = '';
     state.taal = 'teentaal';
+    state.samOffset = 1;
     state.laya = '';
     state.bpm = '';
     state.notes = '';
@@ -665,13 +682,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sidebar buttons
   document.getElementById('sidebar-new-file').addEventListener('click', sidebarCreateFile);
   document.getElementById('sidebar-new-folder').addEventListener('click', sidebarCreateFolder);
-  document.getElementById('sign-out-btn').addEventListener('click', () => {
-    signOut();
+  document.getElementById('switch-user-btn').addEventListener('click', () => {
+    clearUsername();
     currentFileId = null;
     currentFileName = null;
+    localStorage.removeItem('sargam_current_file');
     clearEditor();
     document.getElementById('sidebar').classList.remove('visible');
     signInOverlay.classList.remove('hidden');
+    usernameInput.value = '';
+    usernameInput.focus();
     if (autoSaveTimer) clearInterval(autoSaveTimer);
   });
 });

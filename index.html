@@ -8,17 +8,15 @@
 </head>
 <body>
 
-<!-- Sign-in overlay -->
+<!-- Username prompt (first-time visit only) -->
 <div id="sign-in-overlay" class="sign-in-overlay">
   <div class="sign-in-card">
     <h1>Pancham</h1>
     <p>Write Hindustani classical music notations in the Bhatkhande system.</p>
-    <form id="auth-form" class="auth-form">
-      <input type="email" id="auth-email" placeholder="Email" required>
-      <input type="password" id="auth-password" placeholder="Password" required minlength="6">
+    <form id="username-form" class="auth-form">
+      <input type="text" id="username-input" placeholder="Your name" required minlength="1" autocomplete="off">
       <div class="auth-buttons">
-        <button type="submit" id="auth-signin-btn" class="sign-in-btn">Sign in</button>
-        <button type="button" id="auth-signup-btn" class="sign-up-btn">Sign up</button>
+        <button type="submit" class="sign-in-btn">Continue</button>
       </div>
       <div id="auth-error" class="auth-error"></div>
     </form>
@@ -36,7 +34,8 @@
     </div>
     <div id="file-tree"></div>
     <div class="sidebar-footer">
-      <button id="sign-out-btn">Sign out</button>
+      <span id="current-username" class="current-username"></span>
+      <button id="switch-user-btn">Switch user</button>
     </div>
   </aside>
 
@@ -63,6 +62,7 @@
             <option value="teentaal">Teentaal (16)</option>
             <option value="teentaal_khali">Teentaal - from Khali (16)</option>
           </select></label>
+          <label class="meta-sam">Sam at <input id="sam-offset" type="number" min="1" max="16" value="1"></label>
           <label class="meta-laya">Laya <input id="laya" placeholder="Madhya / Vilambit"></label>
           <label class="meta-bpm">BPM <input id="bpm" type="number" placeholder="e.g. 80"></label>
         </div>
@@ -86,6 +86,19 @@
         Tab = next cell
       </div>
     </main>
+  </div>
+</div>
+
+<!-- Reusable dialog (prompt / confirm) -->
+<div id="dialog-overlay" class="dialog-overlay hidden">
+  <div class="dialog-card">
+    <div id="dialog-title" class="dialog-title"></div>
+    <div id="dialog-message" class="dialog-message"></div>
+    <input type="text" id="dialog-input" class="dialog-input" autocomplete="off">
+    <div class="dialog-actions">
+      <button id="dialog-cancel" class="dialog-btn dialog-btn-cancel">Cancel</button>
+      <button id="dialog-ok" class="dialog-btn dialog-btn-ok">OK</button>
+    </div>
   </div>
 </div>
 

@@ -1,50 +1,11 @@
 /*
- * Supabase Backend for Sargam Notation Writer
+ * Supabase data layer for Pancham.
  *
- * SETUP INSTRUCTIONS:
- * 1. Go to https://supabase.com and sign up (free)
- * 2. Create a new project (pick any region, set a database password)
- * 3. Wait for the project to finish provisioning (~2 minutes)
- * 4. Go to Project Settings > API
- *    - Copy "Project URL" and paste below as SUPABASE_URL
- *    - Copy "anon public" key and paste below as SUPABASE_ANON_KEY
- * 5. Go to SQL Editor, click "New query", paste this SQL, and click "Run":
+ * This is a single-machine multi-user app: rows are scoped by a plain-text
+ * `username` column (no password, no Supabase Auth). The username is chosen
+ * on first load and cached in localStorage. All queries filter by it.
  *
- *    -- Folders table
- *    create table folders (
- *      id uuid default gen_random_uuid() primary key,
- *      name text not null,
- *      parent_id uuid references folders(id) on delete cascade,
- *      user_id uuid references auth.users(id) on delete cascade not null,
- *      created_at timestamptz default now()
- *    );
- *
- *    -- Notations table
- *    create table notations (
- *      id uuid default gen_random_uuid() primary key,
- *      name text not null,
- *      folder_id uuid references folders(id) on delete set null,
- *      user_id uuid references auth.users(id) on delete cascade not null,
- *      content jsonb not null default '{}',
- *      created_at timestamptz default now(),
- *      updated_at timestamptz default now()
- *    );
- *
- *    -- Row Level Security
- *    alter table folders enable row level security;
- *    alter table notations enable row level security;
- *
- *    create policy "Users manage own folders" on folders
- *      for all using (auth.uid() = user_id);
- *
- *    create policy "Users manage own notations" on notations
- *      for all using (auth.uid() = user_id);
- *
- * 6. Go to Authentication > Settings, under "Email Auth":
- *    - Make sure "Enable Email Signup" is ON
- *    - (Optional) Turn OFF "Confirm email" for easier testing
- * 7. Serve the app: python3 -m http.server 8000
- * 8. Open http://localhost:8000
+ * Schema: see schema.sql.
  */
 
 // ── CONFIG ──────────────────────────────────────────────
@@ -56,65 +17,40 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Missing Supabase config. Run ./build-config.sh to generate config.js from .env.');
 }
 
-let supabase = null;
-let currentUser = null;
+// Local reference to the created Supabase client. Named `sb` (not `supabase`)
+// because the CDN UMD bundle already defines a global `supabase` at parse time,
+// and a `let supabase` here throws SyntaxError: "already been declared".
+let sb = null;
+let currentUsername = null;
 
 // ── INIT ────────────────────────────────────────────────
 
 function initSupabase() {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-async function checkSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    return true;
-  }
-  return false;
+function setUsername(name) {
+  currentUsername = name;
+  localStorage.setItem('pancham_username', name);
 }
 
-function onAuthStateChange(callback) {
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      currentUser = session.user;
-      callback(true);
-    } else if (event === 'SIGNED_OUT') {
-      currentUser = null;
-      callback(false);
-    }
-  });
+function loadUsername() {
+  currentUsername = localStorage.getItem('pancham_username') || null;
+  return currentUsername;
 }
 
-async function signUpWithEmail(email, password) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) throw error;
-  return data;
+function clearUsername() {
+  currentUsername = null;
+  localStorage.removeItem('pancham_username');
 }
 
-async function signInWithEmail(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  return data;
-}
-
-async function signOut() {
-  await supabase.auth.signOut();
-  currentUser = null;
-}
-
-function isSignedIn() {
-  return !!currentUser;
-}
-
-// ── FOLDERS CRUD ────────────────────────────────────────
+// ── FOLDERS + NOTATIONS CRUD ────────────────────────────
 
 async function dbListItems(parentId) {
-  // List folders and notations under a parent
-  const foldersQuery = supabase
+  const foldersQuery = sb
     .from('folders')
     .select('id, name, created_at')
-    .eq('user_id', currentUser.id)
+    .eq('username', currentUsername)
     .order('name');
 
   if (parentId) {
@@ -123,10 +59,10 @@ async function dbListItems(parentId) {
     foldersQuery.is('parent_id', null);
   }
 
-  const notationsQuery = supabase
+  const notationsQuery = sb
     .from('notations')
     .select('id, name, updated_at')
-    .eq('user_id', currentUser.id)
+    .eq('username', currentUsername)
     .order('name');
 
   if (parentId) {
@@ -156,12 +92,12 @@ async function dbListItems(parentId) {
 }
 
 async function dbCreateFolder(name, parentId) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('folders')
     .insert({
       name,
       parent_id: parentId || null,
-      user_id: currentUser.id,
+      username: currentUsername,
     })
     .select()
     .single();
@@ -170,12 +106,12 @@ async function dbCreateFolder(name, parentId) {
 }
 
 async function dbCreateNotation(name, folderId, content) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('notations')
     .insert({
       name,
       folder_id: folderId || null,
-      user_id: currentUser.id,
+      username: currentUsername,
       content,
     })
     .select()
@@ -185,7 +121,7 @@ async function dbCreateNotation(name, folderId, content) {
 }
 
 async function dbUpdateNotation(id, content) {
-  const { error } = await supabase
+  const { error } = await sb
     .from('notations')
     .update({ content, updated_at: new Date().toISOString() })
     .eq('id', id);
@@ -193,7 +129,7 @@ async function dbUpdateNotation(id, content) {
 }
 
 async function dbRenameNotation(id, newName) {
-  const { error } = await supabase
+  const { error } = await sb
     .from('notations')
     .update({ name: newName })
     .eq('id', id);
@@ -201,7 +137,7 @@ async function dbRenameNotation(id, newName) {
 }
 
 async function dbRenameFolder(id, newName) {
-  const { error } = await supabase
+  const { error } = await sb
     .from('folders')
     .update({ name: newName })
     .eq('id', id);
@@ -209,7 +145,7 @@ async function dbRenameFolder(id, newName) {
 }
 
 async function dbDeleteNotation(id) {
-  const { error } = await supabase
+  const { error } = await sb
     .from('notations')
     .delete()
     .eq('id', id);
@@ -217,7 +153,7 @@ async function dbDeleteNotation(id) {
 }
 
 async function dbDeleteFolder(id) {
-  const { error } = await supabase
+  const { error } = await sb
     .from('folders')
     .delete()
     .eq('id', id);
@@ -225,7 +161,7 @@ async function dbDeleteFolder(id) {
 }
 
 async function dbGetNotationContent(id) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('notations')
     .select('content')
     .eq('id', id)
@@ -234,7 +170,7 @@ async function dbGetNotationContent(id) {
   return data.content;
 }
 
-// Aliases used by sidebar.js and app.js (matching the old drive.js interface)
+// Aliases used elsewhere (legacy names from the old Google Drive backend).
 const driveListFiles = dbListItems;
 const driveCreateFolder = dbCreateFolder;
 const driveCreateFile = (name, parentId, content) => dbCreateNotation(name, parentId, content);
@@ -243,7 +179,6 @@ const driveDeleteFile = (fileId) => dbDeleteNotation(fileId);
 const driveGetFileContent = dbGetNotationContent;
 
 async function driveRenameFile(fileId, newName) {
-  // Try notation first, then folder
   const cleanName = newName.replace(/\.sargam\.json$/i, '');
   try {
     await dbRenameNotation(fileId, cleanName);
@@ -251,7 +186,3 @@ async function driveRenameFile(fileId, newName) {
     await dbRenameFolder(fileId, cleanName);
   }
 }
-
-// No-ops for compatibility
-function startTokenRefresh() {}
-function ensureToken() { return Promise.resolve(); }

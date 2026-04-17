@@ -23,10 +23,14 @@ There are no tests, no linter, no build.
 Three globals-based scripts share state by loading into the same window, in this order: `drive.js` → `sidebar.js` → `app.js`.
 
 - **`app.js`** — editor core. Owns the single `state` object (title, raga, taal, laya, bpm, notes, sections[]). Each section has `lines[]`; each line has `type` (`notation` | `lyric`) and 16 `cells`. Parsing of the Bhatkhande input DSL happens in `parseToken`/`parseCell`; rendering to Devanagari swaras with komal/tivra/mandra/taar classes happens in `renderSwara`/`renderCell`. Auto-save runs on a 5s interval via `startAutoSave` when `isDirty && currentFileId`.
-- **`drive.js`** — Supabase client + data layer. Despite the name (legacy from a Google Drive backend), this talks to Supabase Postgres. Exposes `db*` functions and `drive*` aliases kept for backward compat with `sidebar.js`/`app.js` call sites. `startTokenRefresh`/`ensureToken` are no-op stubs left over from the Drive implementation.
+- **`drive.js`** — Supabase client + data layer. Despite the name (legacy from a Google Drive backend), this talks to Supabase Postgres. Exposes `db*` functions and `drive*` aliases kept for backward compat with `sidebar.js`/`app.js` call sites. Also owns `currentUsername` and the `setUsername`/`loadUsername`/`clearUsername` helpers — rows are scoped by a plain-text `username` column (no Supabase Auth).
 - **`sidebar.js`** — file-tree UI. Owns `fileTree` (expanded set, cached nodes per folder, selected folder) plus the module-level `currentFileId`/`currentFileName` that `app.js` reads and mutates directly.
 
 State flow: user edits DOM → `save()` serializes inputs into `state`, writes `localStorage.sargam_<fileId>`, sets `isDirty` → auto-save timer calls `saveToDrive()` → `dbUpdateNotation` writes to Supabase. On boot, the last-opened file is rendered from localStorage cache first, then refreshed from Supabase in the background.
+
+## Auth model (there isn't one)
+
+There is no Supabase Auth. On first load the user types a username into the overlay; it is stored in `localStorage.pancham_username` and appended to every insert / every query's `.eq('username', …)`. RLS is disabled on both tables. The "Switch user" button clears the cached username and reloads the overlay. This model trusts every client that can reach the publishable key — fine on localhost, **not** safe to expose publicly without adding a real auth layer back.
 
 ## Input DSL (for the notation cells)
 
