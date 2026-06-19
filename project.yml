@@ -1,0 +1,39 @@
+name: Pancham
+options:
+  minimumXcodeGenVersion: "2.40.0"
+  bundleIdPrefix: com.harshagrawal
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    GENERATE_INFOPLIST_FILE: NO
+    INFOPLIST_FILE: Pancham/Info.plist
+    PRODUCT_BUNDLE_IDENTIFIER: com.harshagrawal.pancham
+    PRODUCT_NAME: Pancham
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    COMBINE_HIDPI_IMAGES: YES
+
+targets:
+  Pancham:
+    type: application
+    platform: macOS
+    sources:
+      - path: Pancham
+        excludes:
+          - "Resources/Fonts/**"
+      - path: Pancham/Resources/Fonts
+        type: folder
+        buildPhase: resources
+    resources:
+      - Pancham/Assets.xcassets
+    entitlements:
+      path: Pancham/Pancham.entitlements
+      properties: {}

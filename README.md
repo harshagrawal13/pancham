@@ -1,50 +1,64 @@
-# Pancham
+# Pancham · पंचम
 
-A static web app for writing Hindustani classical music notations in the Bhatkhande system. Type swaras with a simple keyboard DSL; they render as Devanagari with proper komal/tivra/mandra/taar markings.
+A native macOS app for writing Hindustani classical music notations in the Bhatkhande system. Type swaras with a simple keyboard DSL; they render as Devanagari with proper komal/tivra/mandra/taar markings, on a cream editorial-manuscript page.
 
 ## Features
 
-- 16-cell matra grid with sections, notation lines, and lyric lines
-- Title, raga, taal, laya, and BPM metadata
-- File tree sidebar with folders, backed by Supabase
-- Auto-save every 5s, with a localStorage cache for instant reloads
-- Username-scoped storage — no real auth, just a name tied to your rows
+- Document-based (each notation is a `.pancham` file). File → New, Open, Save, Duplicate, Revert, Open Recent. macOS autosave + versioning come for free.
+- 16-cell matra grid (or 14 for Deepchandi) with sections, notation lines, and lyric lines.
+- Title, raga, taal, laya, and BPM metadata.
+- Edit / Render toggle (⌘R). Render mode rewrites cells into typeset Devanagari with proper decorations, and is the view used for export.
+- Hindustan Editorial visual design — cream paper, aubergine ink, EB Garamond + Noto Serif Devanagari + IBM Plex Sans (all bundled).
 
-## Running locally
+## Running it
+
+Open `Pancham.xcodeproj` in Xcode 16+ on macOS 15 Sequoia, select the `Pancham` scheme, and hit Run. Or from the CLI:
 
 ```
-cp .env.example .env    # fill in SUPABASE_URL + SUPABASE_ANON_KEY
-./build-config.sh       # writes config.js from .env
-python3 -m http.server 8000
+xcodegen generate   # regenerate .xcodeproj from project.yml (only needed if you changed it)
+xcodebuild -project Pancham.xcodeproj -scheme Pancham -destination 'platform=macOS' build
+open ~/Library/Developer/Xcode/DerivedData/Pancham-*/Build/Products/Debug/Pancham.app
 ```
 
-Open `http://localhost:8000`. Re-run `build-config.sh` whenever `.env` changes.
-
-Apply `schema.sql` in the Supabase SQL editor to create the `folders` and `notations` tables.
+Requires Xcode 16+ and `brew install xcodegen` if you want to regenerate the project file from `project.yml`.
 
 ## Input DSL
 
-Typed into each cell:
+Typed into each notation cell:
 
 - `S R G M P D N` — shudh swaras
-- `r g d n` — komal (lowercase)
-- `M'` — tivra
-- `.S` — mandra (lower octave)
-- `^S` — taar (upper octave)
+- `r g d n` — komal (lowercase, renders underlined)
+- `M'` — tivra (vertical tick above)
+- `.S` — mandra (dot below)
+- `^S` — taar (dot above)
 - `-` or `s` — sustain (ऽ)
-- Space — multiple swaras in one matra
-- Tab — next cell · Enter — commit and advance
+- Space inside one cell — multiple swaras in the same matra (rendered smaller)
+- Tab — next cell
 
-## Architecture
+## Project layout
 
-Three plain scripts load into the same window and share globals:
+```
+Pancham.xcodeproj
+Pancham/
+  App/           @main, DocumentGroup, menu commands
+  Document/      Composition / Section / Line / Taal — Codable state model
+  DSL/           SwaraParser — ports parseToken/parseCell from the old web app
+  Views/         EditorView, MetaHeaderView, SectionView, NotationGridView,
+                 CellView, SwaraView, LegendView, NotesView
+  Theme/         Theme.swift — colors, fonts, paperBackground modifier
+  Resources/
+    Fonts/       Bundled Noto Serif Devanagari, EB Garamond, IBM Plex Sans
+  Assets.xcassets
+  Info.plist     ATSApplicationFontsPath, UTExportedTypeDeclarations for .pancham
+Examples/
+  aaj-ibaadat.pancham, sakhi-ae-ri.pancham  (sample compositions)
+project.yml      xcodegen spec
+```
 
-- `drive.js` — Supabase client and data layer (`db*` / `drive*` functions)
-- `sidebar.js` — file-tree UI, owns `currentFileId`
-- `app.js` — editor core, owns the `state` object and rendering
+## File format
 
-No build step, no package manager, no tests. See `CLAUDE.md` for deeper notes.
+`.pancham` files are JSON. The schema matches the original web app's Export JSON output, so any JSON exported from the web version opens in the Mac app directly. See `Pancham/Document/Composition.swift` for the Codable types.
 
-## Auth
+## License
 
-There is no Supabase Auth. On first load you type a username; it is stored in `localStorage` and appended to every query. RLS is disabled. Safe on localhost; **not** safe to expose publicly without adding a real auth layer.
+The bundled fonts are redistributed under their original licenses (all OFL/SIL): Noto Serif Devanagari (Google), EB Garamond (Georg Mayr-Duffner), IBM Plex Sans (IBM). See each font's LICENSE on its upstream repository.

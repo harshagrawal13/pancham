@@ -1,3 +1,21 @@
-.env
-config.js
+# macOS
 .DS_Store
+
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift / SPM
+.build/
+Package.resolved
+.swiftpm/
+
+# Local secrets
+.env

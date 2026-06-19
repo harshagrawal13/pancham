@@ -1,0 +1,84 @@
+{
+  "title": "Aaj Ibaadat",
+  "raga": "Yaman",
+  "taal": "deepchandi",
+  "samOffset": 1,
+  "laya": "विलंबित",
+  "bpm": "",
+  "notes": "Opening shloka — Mangalam Bhagwan Vishnu. 14 matra Deepchandi (3+4+3+4). Extracted from Bollywood Trails. Multi-swara cells marked with spaces inside a cell. Please re-verify ambiguous positions (especially runs in parentheses and 5-note-in-4-cell splits).",
+  "sections": [
+    {
+      "name": "स्थायी",
+      "lines": [
+        { "type": "notation", "cells": ["S", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"] },
+        { "type": "lyric",    "cells": ["O", "",  "",  "",  "",  "",  "",  "",  "",  "",  "M", "",  "",  ""]  },
+        { "type": "notation", "cells": ["S", ".N", "R", "S", "-", "S", "-", "-", "-", "-", "-", "-", "S", "S"] },
+        { "type": "lyric",    "cells": ["Ma", "N", "Ga", "La", "", "M", "", "", "", "", "", "", "Bha", "G"] },
+        { "type": "notation", "cells": ["R", "G", "R", "S", "-", ".N", "-", ".N", ".N", "R", "M'", "M'", "P", "P"] },
+        { "type": "lyric",    "cells": ["Ba", "", "N", "Bi", "", "Shnu", "", "Ma", "N", "Ga", "La", "M", "Ga", "Ru"] },
+        { "type": "notation", "cells": ["R", "G", "R", "S", ".N", ".D", ".N", "-", "-", "-", "-", "-", "-", "-"] },
+        { "type": "lyric",    "cells": ["Da", "", "Dhwa", "Ja", "", "", "", "", "", "", "", "", "", ""] },
+        { "type": "notation", "cells": ["", "", "", ".N", ".D", ".N", ".R", "G R", "-", ".D .N", "", "", "", ""] },
+        { "type": "lyric",    "cells": ["", "", "", "De", "", "", "", "", "", "Re", "", "", "", ""] },
+        { "type": "notation", "cells": ["", "P", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"] },
+        { "type": "lyric",    "cells": ["", "O", "", "", "", "", "", "", "", "", "", "", "M", ""] }
+      ]
+    },
+    {
+      "name": "Pre-verse 1",
+      "lines": [
+        { "type": "notation", "cells": ["", "", "", "D", "N", "N", "D", "P", "", "", "", "", "", ""] },
+        { "type": "lyric",    "cells": ["", "", "", "Re", "", "", "", "", "", "", "", "", "", ""] },
+        { "type": "notation", "cells": ["P", "M'", "D", "P", "P", "", "", "^S N P", "M' R", ".N S", "P", "P", "", ""] },
+        { "type": "lyric",    "cells": ["Ma", "N", "Ga", "La", "M", "", "", "Na", "", "", "Pu", "N", "", ""] },
+        { "type": "notation", "cells": ["D", "N", "D", "P", "-", "P", "-", "R", "-", "R", "M'", "-", "M'", "P"] },
+        { "type": "lyric",    "cells": ["Da", "Ri", "", "Ka", "", "Aksham", "", "Ma", "N", "Ga", "La", "", "Ya", "Ta"] },
+        { "type": "notation", "cells": ["R", "G", "R", "S", "", "S", "", "-", "-", "-", "-", "-", "-", "-"] },
+        { "type": "lyric",    "cells": ["No", "", "Ha", "Ri", "", "", "", "", "", "", "", "", "", ""] }
+      ]
+    },
+    {
+      "name": "Verse 1",
+      "lines": [
+        { "type": "notation", "cells": ["", "P", "", "P", "-", "P", "P", "N", "D", "N", "P", "M'", "M'", "P"] },
+        { "type": "lyric",    "cells": ["", "Aa", "", "J", "", "I", "", "Ba", "", "", "Da", "", "", "T"] },
+        { "type": "notation", "cells": ["", "P", "", "P", "-", "P", "P", "N", "D", "N", "P", "M'", "M'", "P"] },
+        { "type": "lyric",    "cells": ["", "Aa", "", "J", "", "I", "", "Ba", "", "", "Da", "", "", "T"] },
+        { "type": "notation", "cells": ["P", "M'", "D", "M'", "D", "P", "M' R", "R", "G", "R", ".N", "R", "S", "-"] },
+        { "type": "lyric",    "cells": ["Ru", "", "B", "Ru", "", "", "", "Ho", "", "G", "Yi", "", "", ""] },
+
+        { "type": "notation", "cells": ["N", "-", "N", "N", "-", "N", "^R", "^R", "S", "-", "^S", "-", "-", "-"] },
+        { "type": "lyric",    "cells": ["Jo", "", "", "Ma", "", "", "An", "Gi", "", "", "Thi", "", "", ""] },
+        { "type": "notation", "cells": ["^S", "-", "-", "^S", "^S", "N", "N", "D N", "^S", "N D", "P", "-", "-", "-"] },
+        { "type": "lyric",    "cells": ["", "", "", "", "", "", "", "", "", "", "", "", "", ""] },
+        { "type": "notation", "cells": ["N", "-", "N", "N", "-", "N", "^R", "^R ^G", "^R", "^S", "^S", "-", "-", "N"] },
+        { "type": "lyric",    "cells": ["Jo", "", "", "Ma", "", "", "An", "Gi", "", "", "Thi", "", "", ""] },
+        { "type": "notation", "cells": ["N", "^R", "-", "^R", "-", "^R", "^G", "^R", "^G", "^R S", "^S", "-", "^S", "M'"] },
+        { "type": "lyric",    "cells": ["U", "S", "", "", "", "", "Du", "A", "", "", "Se", "", "", ""] },
+
+        { "type": "notation", "cells": ["M'", "-", "D", "M' D", "P M'", "G P", "G R", "S", ".N", "R", ".N", "R", "S", "-"] },
+        { "type": "lyric",    "cells": ["Gu", "", "Pt", "Gu", "", "", "", "Ho", "", "Ga", "Yi", "", "", ""] },
+        { "type": "notation", "cells": ["^S N", "D N", "^R ^G", "^R ^S", "N ^R", "^S N", "D P", "M' D", "P M'", "G r", "S", "S", "S", "S"] },
+        { "type": "lyric",    "cells": ["Aa", "", "", "", "", "", "", "", "", "", "Me", "Re", "Ma", "U"] },
+        { "type": "notation", "cells": ["^S", "D", "D", "-", "-", "-", "-", "-", "-", "-", "N", "D", "N", "D"] },
+        { "type": "lyric",    "cells": ["La", "", "", "", "", "", "", "", "", "", "Me", "Re", "Ma", "U"] },
+        { "type": "notation", "cells": ["N", "D", "P", "P", "P", "G", "G", "G M", "P G", "M R", "S", "S", "^S N", "^R ^S"] },
+        { "type": "lyric",    "cells": ["La", "", "", "", "", "", "", "", "", "", "Me", "Re", "Ma", "U"] },
+
+        { "type": "notation", "cells": ["N D", "D", "M", "P", "-", "D", "-", "-", "-", "-", "N", "D", "N", "^R"] },
+        { "type": "lyric",    "cells": ["La", "", "", "", "", "", "", "", "", "", "Me", "Re", "Ma", "U"] },
+        { "type": "notation", "cells": ["N", "D", "P", "-", "-", "-", "-", "-", "-", "-", "P N", "D N", "M' d", "P P"] },
+        { "type": "lyric",    "cells": ["La", "", "", "", "", "", "", "", "", "", "Te", "", "", ""] },
+        { "type": "notation", "cells": ["M'", "M'", "M'", "G", "G", "R", "R", "-", "-", "-", ".N", ".N", ".N", ".N"] },
+        { "type": "lyric",    "cells": ["Ra", "", "", "", "", "", "", "", "", "", "Su", "K", "Ri", ""] },
+        { "type": "notation", "cells": ["S", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"] },
+        { "type": "lyric",    "cells": ["Ya", "", "", "", "", "", "", "", "", "", "", "", "", ""] },
+
+        { "type": "notation", "cells": ["", "P", "", "P", "-", "P", "P", "D N", "P D", "N ^S N", "N D", "P", "P", "P"] },
+        { "type": "lyric",    "cells": ["", "Aa", "", "J", "", "I", "", "Ba", "", "", "Da", "", "", "T"] },
+        { "type": "notation", "cells": ["P", "M'", "D", "M'", "D", "P", "M' R", "G M'", "P D", "P", "R", "-", "G", "S -"] },
+        { "type": "lyric",    "cells": ["Ru", "", "B", "Ru", "", "", "", "Ho", "", "G", "Yi", "", "", ""] }
+      ]
+    }
+  ]
+}
