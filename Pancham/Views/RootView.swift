@@ -56,6 +56,7 @@ struct LibraryEditor: View {
     @State private var newFolderSheet: Bool = false
     @State private var folderName: String = ""
     @State private var saveTask: Task<Void, Never>? = nil
+    @State private var showNowPlaying: Bool = false
 
     init(prefs: Preferences, root: URL, user: PanchamUser) {
         _prefs = Bindable(prefs)
@@ -89,12 +90,26 @@ struct LibraryEditor: View {
                 isRenderMode: $isRenderMode,
                 library: library,
                 playback: playback,
-                onNewFile: { creatingFile = true }
+                onNewFile: { creatingFile = true },
+                onPerform: { showNowPlaying = true }
             )
         }
         .background(Theme.canvas)
+        .overlay {
+            if showNowPlaying {
+                NowPlayingView(
+                    composition: composition,
+                    playback: playback,
+                    onClose: { showNowPlaying = false }
+                )
+                .transition(.move(edge: .bottom))
+                .zIndex(10)
+            }
+        }
+        .animation(.spring(response: 0.45, dampingFraction: 0.86), value: showNowPlaying)
         .onChange(of: selectedURL) { _, newURL in
             playback.stop()
+            showNowPlaying = false
             loadSelected(newURL)
         }
         .onAppear {
@@ -194,6 +209,7 @@ struct LibraryEditor: View {
                 _ = s.name
                 for l in s.lines {
                     _ = l.type
+                    _ = l.label
                     for box in l.cells { _ = box.text }
                 }
             }
@@ -238,6 +254,7 @@ struct EditorPane: View {
     let library: Library
     @Bindable var playback: PlaybackEngine
     let onNewFile: () -> Void
+    let onPerform: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -257,8 +274,19 @@ struct EditorPane: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.canvas)
         // A tonic / tempo change while playing re-renders the piece transposed.
-        .onChange(of: playback.tonicMidi) { _, _ in restartIfPlaying() }
-        .onChange(of: playback.tempoOverride) { _, _ in restartIfPlaying() }
+        // These handlers live in the always-mounted editor pane so they fire
+        // whether the change comes from here or the now-playing overlay.
+        // Every transport tweak applies live and keeps your place: tempo maps
+        // by beat fraction; tonic/sustain/fade recompile timing in place;
+        // instrument is a patch swap; volume is a mixer gain. None restart.
+        .onChange(of: playback.tonicMidi) { _, _ in playback.applyTimingChange() }
+        .onChange(of: playback.tempoOverride) { _, _ in playback.applyTempoChange() }
+        .onChange(of: playback.instrument) { _, _ in playback.reloadInstrument() }
+        .onChange(of: playback.sustain) { _, _ in playback.applyTimingChange() }
+        .onChange(of: playback.fade) { _, _ in playback.applyTimingChange() }
+        .onChange(of: playback.instrumentVolume) { _, _ in playback.applyVolumes() }
+        .onChange(of: playback.tablaVolume) { _, _ in playback.applyVolumes() }
+        .onChange(of: playback.tablaEnabled) { _, _ in playback.applyTimingChange() }
     }
 
     private func restartIfPlaying() {
@@ -309,27 +337,17 @@ struct EditorPane: View {
 
     private var playbackControls: some View {
         HStack(spacing: 8) {
-            Button {
-                if playback.isPlaying { playback.stop() }
-                else { playback.play(composition) }
-            } label: {
-                // SF Symbol renders regardless of the custom UI font (IBM Plex
-                // Sans has no ▶/■ glyphs, which left the label blank before).
+            // Play opens the full-window now-playing screen (3-2-1 lead-in,
+            // scrolling lyrics) rather than sounding inline. SF Symbol renders
+            // regardless of the custom UI font (IBM Plex Sans has no ▶ glyph).
+            Button(action: onPerform) {
                 HStack(spacing: 5) {
-                    Image(systemName: playback.isPlaying ? "stop.fill" : "play.fill")
-                    Text(playback.isPlaying ? "Stop" : "Play")
+                    Image(systemName: "play.fill")
+                    Text("Play")
                 }
             }
             .buttonStyle(ToolbarOutlineButton())
             .keyboardShortcut("p", modifiers: [.command, .shift])
-
-            Menu("Sa · \(Self.noteName(playback.tonicMidi))") {
-                ForEach(55...67, id: \.self) { m in
-                    Button(Self.noteName(m)) { playback.tonicMidi = m }
-                }
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
 
             Menu("\(Int(playback.effectiveBPM(for: composition))) BPM") {
                 Button("Score tempo (\(composition.bpm.isEmpty ? "—" : composition.bpm))") {

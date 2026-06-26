@@ -14,11 +14,16 @@
 		170FCE84B69AC517D5D623CB /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 5589A9D734A057EAAF4D63B5 /* Fonts */; };
 		1DC8BFB9B3722124E19FA3EA /* Composition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C55FF8295E7B84C55136E2 /* Composition.swift */; };
 		2276D97813C106F293ECB9F5 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18986CFD0E0C620BB1A95A86 /* CellView.swift */; };
+		22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BBCA391BB26CF3A46761DB /* Theka.swift */; };
 		37770072709F7ABA49DE4446 /* NotationGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520E55DD8E2A47FB1684C497 /* NotationGridView.swift */; };
+		48381BA82FCAC4C772D9CB9A /* vsco-strings.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */; };
 		49A1690ED7F8288A6FC9763D /* SectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D47E328242951C82246D193 /* SectionView.swift */; };
+		4BCA4D215C508C6317DFB8C5 /* tabla.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = DAFB46DA9CB1641F3498029F /* tabla.sf2 */; };
 		5CEBC7609E07DE393888D1B0 /* LibrarySidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */; };
+		7DC5E83A534CAAC5823D445A /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086601BA8121576F9CAB43A /* NowPlayingView.swift */; };
 		7E0E9B7CAAF45C9270BE822A /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */; };
 		824E8DA6D206BAB0BE9B6BF2 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADC0513DB717581EB37954B /* Library.swift */; };
+		8625E0679B53E1FEF5155929 /* vsco-organ.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = 38EB984CA50B616600C41939 /* vsco-organ.sf2 */; };
 		97B33B568A33A8ABE78F44AD /* MetaHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */; };
 		AA60B142A7D78EC47BFA6D00 /* Taal.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */; };
 		ADAB9E35D5247B5B4342D22D /* LegendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */; };
@@ -43,10 +48,13 @@
 		21C1D3904E05B5497CCEEF32 /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		242715F6824A883FDEDF2F3B /* Pancham.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pancham.entitlements; sourceTree = "<group>"; };
 		2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegendView.swift; sourceTree = "<group>"; };
+		3086601BA8121576F9CAB43A /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
 		31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebar.swift; sourceTree = "<group>"; };
+		38EB984CA50B616600C41939 /* vsco-organ.sf2 */ = {isa = PBXFileReference; path = "vsco-organ.sf2"; sourceTree = "<group>"; };
 		4FDDBD5B8DE1D48141FCD5DD /* SwaraParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwaraParser.swift; sourceTree = "<group>"; };
 		520E55DD8E2A47FB1684C497 /* NotationGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotationGridView.swift; sourceTree = "<group>"; };
 		5589A9D734A057EAAF4D63B5 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = Pancham/Resources/Fonts; sourceTree = SOURCE_ROOT; };
+		56BBCA391BB26CF3A46761DB /* Theka.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theka.swift; sourceTree = "<group>"; };
 		643BF03D9A3D6D6855AF3333 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwaraView.swift; sourceTree = "<group>"; };
 		6DB497E899D624CDFB8E1AAF /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
@@ -56,8 +64,10 @@
 		9F3A4F5F934B314C7F2A25E9 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		A461BBD27B99C7A054D22B2F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A8C55FF8295E7B84C55136E2 /* Composition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Composition.swift; sourceTree = "<group>"; };
+		B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */ = {isa = PBXFileReference; path = "vsco-strings.sf2"; sourceTree = "<group>"; };
 		D0C4F279E65FC50CB1F3033E /* Pancham.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pancham.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaHeaderView.swift; sourceTree = "<group>"; };
+		DAFB46DA9CB1641F3498029F /* tabla.sf2 */ = {isa = PBXFileReference; path = tabla.sf2; sourceTree = "<group>"; };
 		EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taal.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -83,8 +93,19 @@
 			isa = PBXGroup;
 			children = (
 				5589A9D734A057EAAF4D63B5 /* Fonts */,
+				591F290A024BD721BECB7585 /* Sounds */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		591F290A024BD721BECB7585 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				DAFB46DA9CB1641F3498029F /* tabla.sf2 */,
+				38EB984CA50B616600C41939 /* vsco-organ.sf2 */,
+				B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 		650A1083C5CEFF061B76ADD0 /* DSL */ = {
@@ -99,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */,
+				56BBCA391BB26CF3A46761DB /* Theka.swift */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -113,6 +135,7 @@
 				D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */,
 				520E55DD8E2A47FB1684C497 /* NotationGridView.swift */,
 				21C1D3904E05B5497CCEEF32 /* NotesView.swift */,
+				3086601BA8121576F9CAB43A /* NowPlayingView.swift */,
 				83587F3407B45EF8C728AE9C /* OnboardingView.swift */,
 				19E100E422285CF28DFC5160 /* PanchamLogo.swift */,
 				0EA7203A312C5EA5150CBEFF /* RootView.swift */,
@@ -228,6 +251,9 @@
 			files = (
 				BC09B2F4B50B35A81A6AEFCC /* Assets.xcassets in Resources */,
 				170FCE84B69AC517D5D623CB /* Fonts in Resources */,
+				4BCA4D215C508C6317DFB8C5 /* tabla.sf2 in Resources */,
+				8625E0679B53E1FEF5155929 /* vsco-organ.sf2 in Resources */,
+				48381BA82FCAC4C772D9CB9A /* vsco-strings.sf2 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +273,7 @@
 				97B33B568A33A8ABE78F44AD /* MetaHeaderView.swift in Sources */,
 				37770072709F7ABA49DE4446 /* NotationGridView.swift in Sources */,
 				113F435C45DBCB7BEFB8AEAE /* NotesView.swift in Sources */,
+				7DC5E83A534CAAC5823D445A /* NowPlayingView.swift in Sources */,
 				CA441298DE1D36A385944FE3 /* OnboardingView.swift in Sources */,
 				0C8D26F0E64FA0A1C6E89DFC /* PanchamApp.swift in Sources */,
 				E07A5788392DB67DF4C32514 /* PanchamLogo.swift in Sources */,
@@ -257,6 +284,7 @@
 				B6CC6314BE0CBB6BCF46B0F3 /* SwaraParser.swift in Sources */,
 				1603CF1F3E61D85D5B611892 /* SwaraView.swift in Sources */,
 				AA60B142A7D78EC47BFA6D00 /* Taal.swift in Sources */,
+				22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */,
 				D1B2B80495445E09BC6F4FE0 /* Theme.swift in Sources */,
 				137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */,
 			);

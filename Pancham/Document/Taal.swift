@@ -15,6 +15,24 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// Short taal name, for the theka toggle in the player.
+    var name: String {
+        switch self {
+        case .teentaal, .teentaal_khali: return "Teentaal"
+        case .deepchandi:                return "Deepchandi"
+        }
+    }
+
+    /// Whether a playable tabla theka exists for this taal. For now only
+    /// Teentaal is supported, so a Teentaal notation can't be played to any
+    /// other taal's theka.
+    var hasTheka: Bool {
+        switch self {
+        case .teentaal, .teentaal_khali: return true
+        case .deepchandi:                return false
+        }
+    }
+
     var matras: Int {
         switch self {
         case .teentaal, .teentaal_khali: return 16

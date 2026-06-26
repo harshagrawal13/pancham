@@ -24,27 +24,33 @@ final class Line: Identifiable, Codable {
     let id: UUID
     var type: LineType
     var cells: [CellBox]
+    /// Optional performer's annotation for a notation line (e.g. "Sthayi 1").
+    /// Empty means "use the auto line number" in the player.
+    var label: String
 
-    init(type: LineType, cells: [String]) {
+    init(type: LineType, cells: [String], label: String = "") {
         self.id = UUID()
         self.type = type
         self.cells = cells.map { CellBox($0) }
+        self.label = label
     }
 
-    init(type: LineType, cellBoxes: [CellBox]) {
+    init(type: LineType, cellBoxes: [CellBox], label: String = "") {
         self.id = UUID()
         self.type = type
         self.cells = cellBoxes
+        self.label = label
     }
 
-    // Codable — serialize as { type, cells: [String] }, accept legacy bare-array.
-    enum CodingKeys: String, CodingKey { case type, cells }
+    // Codable — serialize as { type, cells: [String], label }, accept legacy bare-array.
+    enum CodingKeys: String, CodingKey { case type, cells, label }
 
     required convenience init(from decoder: Decoder) throws {
         if let c = try? decoder.container(keyedBy: CodingKeys.self),
            let type = try? c.decode(LineType.self, forKey: .type),
            let cells = try? c.decode([String].self, forKey: .cells) {
-            self.init(type: type, cells: cells)
+            let label = (try? c.decodeIfPresent(String.self, forKey: .label)) ?? ""
+            self.init(type: type, cells: cells, label: label)
             return
         }
         var u = try decoder.unkeyedContainer()
@@ -57,6 +63,7 @@ final class Line: Identifiable, Codable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(type, forKey: .type)
         try c.encode(cells.map { $0.text }, forKey: .cells)
+        if !label.isEmpty { try c.encode(label, forKey: .label) }
     }
 }
 

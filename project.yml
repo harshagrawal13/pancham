@@ -29,8 +29,16 @@ targets:
       - path: Pancham
         excludes:
           - "Resources/Fonts/**"
+          - "Resources/Sounds/**"
       - path: Pancham/Resources/Fonts
         type: folder
+        buildPhase: resources
+      # Bundled SoundFonts (flat in Resources/ for Bundle.url lookup).
+      - path: Pancham/Resources/Sounds/vsco-strings.sf2
+        buildPhase: resources
+      - path: Pancham/Resources/Sounds/vsco-organ.sf2
+        buildPhase: resources
+      - path: Pancham/Resources/Sounds/tabla.sf2
         buildPhase: resources
     resources:
       - Pancham/Assets.xcassets

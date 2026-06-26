@@ -19,3 +19,9 @@ Package.resolved
 
 # Local secrets
 .env
+
+# SoundFont build caches / Python artifacts
+Tools/cache/
+Tools/cache_tabla/
+__pycache__/
+*.pyc
