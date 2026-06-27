@@ -9,11 +9,10 @@ import AVFoundation
 /// rests. Pitch is the swara's semitone offset from Sa, added to a user-chosen
 /// tonic. This mirrors the `tokenToMidi` / `buildEvents` reference converter.
 ///
-/// Sound comes from `AVAudioUnitSampler`. We prefer a bundled `harmonium.sf2`
-/// if present, else one of two system General-MIDI voices the user picks
-/// between — soft strings (Synth Strings 1) or a reedy harmonium (Reed Organ).
-/// Both have a gentle attack; the `sustain` control then rings each note past
-/// its matra so notes blend into the next.
+/// Sound comes from `AVAudioUnitSampler` — bundled VSCO SoundFonts (strings,
+/// organ) or system General-MIDI voices (soft strings, reedy harmonium), picked
+/// by the user. Each note plays to its matra, ending a hair before the next note
+/// of the same pitch so repeated swaras re-articulate.
 @MainActor
 @Observable
 final class PlaybackEngine {
@@ -76,13 +75,6 @@ final class PlaybackEngine {
     var tempoOverride: Double?
     /// Melodic voice. Change is applied to the live sampler via `reloadInstrument()`.
     var instrument: Instrument = .softStrings
-    /// 0…1. Extra ring added past each note's matra so notes sustain and blend
-    /// into the next. 0 = stop at the matra boundary.
-    var sustain: Double = 0
-    /// 0…0.5. Per-note volume shaping: ramp up over the first `fade` of the
-    /// note's span and down over the last `fade`, so each note swells in and
-    /// decays out. 0 = no shaping (full volume throughout).
-    var fade: Double = 0
     /// 0…1 level for the melodic voice (strings / harmonium / …).
     var instrumentVolume: Double = 1.0
     /// 0…1 level for the tabla theka.
@@ -109,17 +101,8 @@ final class PlaybackEngine {
 
     private static let velocity: UInt8 = 100
     private static let channel: UInt8 = 0
-    /// CC11 = expression, honoured by Apple's sampler, for the fade envelope.
-    /// Note: it's applied globally (not per-channel) on AUSampler, so the fade
-    /// is one shared envelope and only works on non-overlapping notes — which
-    /// is why fade articulates the line (skips the sustain ring) when engaged.
-    private static let expression: UInt8 = 11
-    /// Steps per fade ramp — enough to sound smooth, few enough to stay cheap.
-    private static let fadeSteps = 8
     /// Tempo used when the score carries no usable `bpm`, so Play always sounds.
     static let defaultBPM: Double = 120
-    /// Ring time (seconds) added past a note's matra at `sustain == 1`.
-    private static let maxRing: Double = 1.4
     /// Gap (seconds) a note ends before the next note of the same pitch, so the
     /// next one re-articulates and its note-on is never cancelled.
     private static let rearticulationGap: Double = 0.02
@@ -138,7 +121,6 @@ final class PlaybackEngine {
     private enum Action {
         case noteOn(UInt8)
         case noteOff(UInt8)
-        case expr(UInt8)
         case tabla(note: UInt8, velocity: UInt8)
         case highlight(step: Int, loc: CellLocation)
         case end
@@ -183,30 +165,22 @@ final class PlaybackEngine {
     // MARK: Transport
 
     /// Compile the piece into the time-sorted `actions` list and note spans.
-    ///
-    /// When `fade` is 0, each note rings `ring` seconds past its matra (the
-    /// sustain control) so notes blend; a tail is clamped so it never cuts the
-    /// next strike of the same pitch. When `fade` is engaged it instead shapes
-    /// each note with a CC11 expression envelope (swell in, decay to 0 before
-    /// the next) — and since that envelope is global on Apple's sampler, fade
-    /// drops the ring so notes don't overlap and fight one shared envelope.
-    /// Order at a shared instant: note-off, expression, note-on, highlight, end.
+    /// Each note plays to its matra, ending a hair before the next note of the
+    /// same pitch so repeated swaras re-articulate. Order at a shared instant:
+    /// note-off (0), tabla (2), note-on (3), highlight (4), end (5).
     private func compile(_ composition: Composition, bpm: Double) {
         let timeline = Self.buildTimeline(for: composition, tonic: tonicMidi, bpm: bpm)
         var acts: [(time: Double, order: Int, action: Action)] = []
         var spans: [(m: UInt8, start: Double, off: Double)] = []
-        let fadeFrac = max(0, min(0.5, fade))
-        let ring = fadeFrac > 0 ? 0 : Self.maxRing * max(0, min(1, sustain))
         let notes = timeline.notes
         for i in notes.indices {
             let n = notes[i]
             let m = UInt8(clamping: n.midi)
-            var off = n.start + n.dur + ring
-            // Always end a hair before the NEXT note of the same pitch. Without
-            // this, a note-off landing at the exact instant of the next
-            // identical note-on can cancel it (and any float rounding flips the
-            // order, silencing it) — and even when it sounds, consecutive same
-            // pitches blur with no re-articulation. The small gap fixes both.
+            var off = n.start + n.dur
+            // End a hair before the NEXT note of the same pitch. Without this, a
+            // note-off landing at the exact instant of the next identical note-on
+            // can cancel it (and float rounding could reorder the two) — and even
+            // when it sounds, consecutive same pitches blur. The gap fixes both.
             for j in (i + 1)..<notes.count where notes[j].midi == n.midi {
                 off = min(off, notes[j].start - Self.rearticulationGap)
                 break
@@ -215,17 +189,6 @@ final class PlaybackEngine {
             acts.append((n.start, 3, .noteOn(m)))
             acts.append((off, 0, .noteOff(m)))
             spans.append((m, n.start, off))
-
-            if fadeFrac > 0 {
-                let span = off - n.start
-                let edge = span * fadeFrac
-                acts.append((n.start, 1, .expr(0)))   // start silent
-                for s in 1...Self.fadeSteps {
-                    let f = Double(s) / Double(Self.fadeSteps)
-                    acts.append((n.start + edge * f, 1, .expr(UInt8((127 * f).rounded()))))
-                    acts.append((off - edge + edge * f, 1, .expr(UInt8((127 * (1 - f)).rounded()))))
-                }
-            }
         }
         for c in timeline.cells {
             acts.append((c.start, 4, .highlight(step: c.step, loc: c.loc)))
@@ -272,7 +235,7 @@ final class PlaybackEngine {
         guard let point = seekPoints.first(where: { $0.step == step && $0.cell == cell }) else { return }
         countdownTask?.cancel(); countdownTask = nil
         task?.cancel(); task = nil
-        silenceAllChannels()
+        silence()
         elapsed = min(point.time, totalDuration)
         runLoop(from: elapsed)
     }
@@ -296,11 +259,9 @@ final class PlaybackEngine {
         tablaMix.outputVolume = Float(max(0, min(1, tablaVolume)))
     }
 
-    /// All-notes-off, and restore expression to full so a note left mid-fade
-    /// doesn't leave the next one silent.
-    private func silenceAllChannels() {
+    /// All-notes-off on both voices.
+    private func silence() {
         sampler.sendController(123, withValue: 0, onChannel: Self.channel)
-        sampler.sendController(Self.expression, withValue: 127, onChannel: Self.channel)
         tablaSampler.sendController(123, withValue: 0, onChannel: 0)
     }
 
@@ -314,8 +275,7 @@ final class PlaybackEngine {
         }
         isPlaying = true
         isPaused = false
-        // Re-strike (at full expression) notes that should already be sounding.
-        sampler.sendController(Self.expression, withValue: 127, onChannel: Self.channel)
+        // Re-strike notes that should already be sounding at the resume point.
         for span in noteSpans where span.start <= offset && offset < span.off {
             sampler.startNote(span.m, withVelocity: Self.velocity, onChannel: Self.channel)
         }
@@ -333,8 +293,6 @@ final class PlaybackEngine {
                     self.sampler.startNote(m, withVelocity: Self.velocity, onChannel: Self.channel)
                 case .noteOff(let m):
                     self.sampler.stopNote(m, onChannel: Self.channel)
-                case .expr(let value):
-                    self.sampler.sendController(Self.expression, withValue: value, onChannel: Self.channel)
                 case .tabla(let note, let velocity):
                     self.tablaSampler.startNote(note, withVelocity: velocity, onChannel: 0)
                 case .highlight(let step, let loc):
@@ -357,7 +315,7 @@ final class PlaybackEngine {
         }
         task?.cancel()
         task = nil
-        silenceAllChannels()
+        silence()
         isPlaying = false
         isPaused = true
     }
@@ -370,7 +328,7 @@ final class PlaybackEngine {
 
     /// Recompile timing in place (e.g. the sustain slider moved) and continue
     /// from the current playhead, so a live tweak doesn't jump back to the top.
-    func applyTimingChange() {
+    func recompileInPlace() {
         guard let comp = loadedComposition, isPlaying || isPaused else { return }
         let wasPlaying = isPlaying
         let pos: Double = {
@@ -381,7 +339,7 @@ final class PlaybackEngine {
         }()
         task?.cancel()
         task = nil
-        silenceAllChannels()
+        silence()
         compile(comp, bpm: effectiveBPM(for: comp))
         elapsed = min(pos, totalDuration)
         if wasPlaying {
@@ -408,7 +366,7 @@ final class PlaybackEngine {
         let beatFraction = oldBeat > 0 ? posSeconds / oldBeat : 0
         task?.cancel()
         task = nil
-        silenceAllChannels()
+        silence()
         compile(comp, bpm: effectiveBPM(for: comp))
         let newBeat = 60.0 / currentBPM
         elapsed = min(beatFraction * newBeat, totalDuration)
@@ -463,7 +421,7 @@ final class PlaybackEngine {
         task?.cancel()
         task = nil
         countdown = nil
-        silenceAllChannels()
+        silence()
         isPlaying = false
         isPaused = false
         elapsed = 0

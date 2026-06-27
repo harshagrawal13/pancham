@@ -258,27 +258,19 @@ extension Composition {
         return valid.isEmpty ? defaultPerformanceSteps() : valid
     }
 
-    /// The ordered "rows" that a play-through visits — one per performance step
-    /// (each may repeat). Structured forms use the plan; others list every
-    /// notation line once. Both the audio timeline and the now-playing screen
-    /// walk this, so the cursor and the karaoke rows line up.
-    func performanceRows() -> [PerformanceStep] {
-        if form.isStructured {
-            let steps = effectivePerformanceSteps()
-            if !steps.isEmpty { return steps }
-        }
-        return linearLineRefs().map { PerformanceStep(section: $0.section, line: $0.line, repeats: 1) }
-    }
-
     /// The fully expanded play order — one entry per repeat, so a ×2 step becomes
-    /// two consecutive units. Both the audio timeline and the now-playing rows
-    /// walk this, so repeats show as duplicated lines that play linearly.
+    /// two consecutive units. Structured forms follow the performance plan;
+    /// others play every notation line once. The single source of truth for both
+    /// the audio timeline and the now-playing rows, so the cursor and the
+    /// karaoke rows line up.
     func performanceUnits() -> [(section: Int, line: Int)] {
-        var units: [(section: Int, line: Int)] = []
-        for row in performanceRows() {
-            for _ in 0..<max(1, row.repeats) { units.append((row.section, row.line)) }
+        let steps = form.isStructured ? effectivePerformanceSteps() : []
+        let rows = steps.isEmpty
+            ? linearLineRefs().map { PerformanceStep(section: $0.section, line: $0.line, repeats: 1) }
+            : steps
+        return rows.flatMap {
+            Array(repeating: (section: $0.section, line: $0.line), count: max(1, $0.repeats))
         }
-        return units
     }
 
     func linearLineRefs() -> [(section: Int, line: Int)] {

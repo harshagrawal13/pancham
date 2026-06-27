@@ -294,12 +294,12 @@ struct EditorPane: View {
         // Every transport tweak applies live and keeps your place: tempo maps
         // by beat fraction; tonic/sustain/fade recompile timing in place;
         // instrument is a patch swap; volume is a mixer gain. None restart.
-        .onChange(of: playback.tonicMidi) { _, _ in playback.applyTimingChange() }
+        .onChange(of: playback.tonicMidi) { _, _ in playback.recompileInPlace() }
         .onChange(of: playback.tempoOverride) { _, _ in playback.applyTempoChange() }
         .onChange(of: playback.instrument) { _, _ in playback.reloadInstrument() }
         .onChange(of: playback.instrumentVolume) { _, _ in playback.applyVolumes() }
         .onChange(of: playback.tablaVolume) { _, _ in playback.applyVolumes() }
-        .onChange(of: playback.tablaEnabled) { _, _ in playback.applyTimingChange() }
+        .onChange(of: playback.tablaEnabled) { _, _ in playback.recompileInPlace() }
     }
 
     private func restartIfPlaying() {
