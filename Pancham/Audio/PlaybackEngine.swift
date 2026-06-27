@@ -51,12 +51,25 @@ final class PlaybackEngine {
             case .harmonium:   return .gm(20)   // Reed Organ — reedy, harmonium-like
             }
         }
+        /// Per-voice output boost in decibels — the GM voices (esp. soft strings)
+        /// are quiet, the VSCO SoundFonts are already loudness-normalized.
+        var gainDB: Float {
+            switch self {
+            case .vscoStrings: return 0
+            case .vscoOrgan:   return 3
+            case .softStrings: return 10
+            case .harmonium:   return 6
+            }
+        }
     }
 
     /// True while a piece is sounding.
     var isPlaying = false
     /// The matra cell currently sounding, for the visual cursor. `nil` when idle.
     var current: CellLocation?
+    /// Index of the current performance row (which step is sounding), so the
+    /// now-playing screen can highlight the right row even when a line recurs.
+    var currentStep: Int?
     /// MIDI note for Sa. Default 60 (C4). Selectable 55…67.
     var tonicMidi: Int = 60
     /// Tempo override in BPM. `nil` uses the score's own `bpm`.
@@ -65,7 +78,7 @@ final class PlaybackEngine {
     var instrument: Instrument = .softStrings
     /// 0…1. Extra ring added past each note's matra so notes sustain and blend
     /// into the next. 0 = stop at the matra boundary.
-    var sustain: Double = 0.4
+    var sustain: Double = 0
     /// 0…0.5. Per-note volume shaping: ramp up over the first `fade` of the
     /// note's span and down over the last `fade`, so each note swells in and
     /// decays out. 0 = no shaping (full volume throughout).
@@ -107,6 +120,13 @@ final class PlaybackEngine {
     static let defaultBPM: Double = 120
     /// Ring time (seconds) added past a note's matra at `sustain == 1`.
     private static let maxRing: Double = 1.4
+    /// Gap (seconds) a note ends before the next note of the same pitch, so the
+    /// next one re-articulates and its note-on is never cancelled.
+    private static let rearticulationGap: Double = 0.02
+    /// Lead (seconds) applied to tabla strokes. 0 = exactly on the beat, in
+    /// sync with the melodic notes (both run off the same clock, so a 0 offset
+    /// is sample-accurate). Now that the bols are onset-aligned, no lead needed.
+    private static let tablaLead: Double = 0.0
 
     // MARK: Playback model
     //
@@ -120,7 +140,7 @@ final class PlaybackEngine {
         case noteOff(UInt8)
         case expr(UInt8)
         case tabla(note: UInt8, velocity: UInt8)
-        case highlight(CellLocation)
+        case highlight(step: Int, loc: CellLocation)
         case end
     }
     private let clock = ContinuousClock()
@@ -135,6 +155,9 @@ final class PlaybackEngine {
     /// BPM the current `actions` were compiled at, so a tempo change can map
     /// the playhead by beat fraction rather than raw seconds.
     private var currentBPM: Double = defaultBPM
+    /// Start time of each cell, keyed by (performance row, matra), so tapping a
+    /// grid cell can seek there.
+    private var seekPoints: [(step: Int, cell: Int, time: Double)] = []
 
     init() {
         engine.attach(sampler)
@@ -179,13 +202,16 @@ final class PlaybackEngine {
             let n = notes[i]
             let m = UInt8(clamping: n.midi)
             var off = n.start + n.dur + ring
-            if ring > 0 {
-                for j in (i + 1)..<notes.count where notes[j].midi == n.midi {
-                    off = min(off, notes[j].start)   // don't let a tail cut the same pitch
-                    break
-                }
+            // Always end a hair before the NEXT note of the same pitch. Without
+            // this, a note-off landing at the exact instant of the next
+            // identical note-on can cancel it (and any float rounding flips the
+            // order, silencing it) — and even when it sounds, consecutive same
+            // pitches blur with no re-articulation. The small gap fixes both.
+            for j in (i + 1)..<notes.count where notes[j].midi == n.midi {
+                off = min(off, notes[j].start - Self.rearticulationGap)
+                break
             }
-            off = max(off, n.start + n.dur)
+            off = max(off, n.start + 0.01)   // keep it positive
             acts.append((n.start, 3, .noteOn(m)))
             acts.append((off, 0, .noteOff(m)))
             spans.append((m, n.start, off))
@@ -202,7 +228,7 @@ final class PlaybackEngine {
             }
         }
         for c in timeline.cells {
-            acts.append((c.start, 4, .highlight(c.loc)))
+            acts.append((c.start, 4, .highlight(step: c.step, loc: c.loc)))
         }
 
         // Tabla theka: one bol per matra, cycling the taal's pattern across the
@@ -218,14 +244,15 @@ final class PlaybackEngine {
             let tuned = UInt8(clamping: tonicMidi)
             for k in 0..<slots where !pattern.isEmpty {
                 let bol = pattern[k % min(matras, pattern.count)]
-                let vel: UInt8 = (k % matras == 0) ? 120 : 92
+                let vel: UInt8 = (k % matras == 0) ? 127 : 110
+                let t = max(0, Double(k) * beat - Self.tablaLead - bol.extraLead)
                 for stroke in bol.strokes {
                     let note: UInt8
                     switch stroke {
                     case .fixed(let key): note = key
                     case .tuned:          note = tuned
                     }
-                    acts.append((Double(k) * beat, 2, .tabla(note: note, velocity: vel)))
+                    acts.append((t, 2, .tabla(note: note, velocity: vel)))
                 }
             }
         }
@@ -236,6 +263,18 @@ final class PlaybackEngine {
         noteSpans = spans
         totalDuration = timeline.total
         currentBPM = bpm
+        seekPoints = timeline.cells.map { (step: $0.step, cell: $0.loc.cell, time: $0.start) }
+    }
+
+    /// Jump to the cell tapped in the now-playing grid (its performance row +
+    /// matra) and play from there. Used to resume from a chosen point.
+    func seek(step: Int, cell: Int) {
+        guard let point = seekPoints.first(where: { $0.step == step && $0.cell == cell }) else { return }
+        countdownTask?.cancel(); countdownTask = nil
+        task?.cancel(); task = nil
+        silenceAllChannels()
+        elapsed = min(point.time, totalDuration)
+        runLoop(from: elapsed)
     }
 
     func play(_ composition: Composition) {
@@ -298,7 +337,8 @@ final class PlaybackEngine {
                     self.sampler.sendController(Self.expression, withValue: value, onChannel: Self.channel)
                 case .tabla(let note, let velocity):
                     self.tablaSampler.startNote(note, withVelocity: velocity, onChannel: 0)
-                case .highlight(let loc):
+                case .highlight(let step, let loc):
+                    self.currentStep = step
                     self.current = loc
                 case .end:
                     break
@@ -384,6 +424,7 @@ final class PlaybackEngine {
         isPlaying = false
         isPaused = false
         current = nil
+        currentStep = nil
         elapsed = 0
         origin = nil
     }
@@ -428,6 +469,7 @@ final class PlaybackEngine {
         elapsed = 0
         origin = nil
         current = nil
+        currentStep = nil
     }
 
     // MARK: Sound bank
@@ -462,6 +504,7 @@ final class PlaybackEngine {
     /// select is MSB 0x79, LSB 0x00 in both cases; bundled SoundFonts carry a
     /// single preset at program 0.
     private func loadInstrumentSound() {
+        sampler.overallGain = instrument.gainDB
         let melodicMSB: UInt8 = 0x79
         switch instrument.sound {
         case .gm(let program):
@@ -479,41 +522,43 @@ final class PlaybackEngine {
     // MARK: Timeline
 
     struct NoteEvent { var midi: Int; var start: Double; var dur: Double }
-    struct CellStep  { var loc: CellLocation; var start: Double }
+    struct CellStep  { var loc: CellLocation; var step: Int; var start: Double }
     struct Timeline  { var notes: [NoteEvent]; var cells: [CellStep]; var total: Double }
 
-    /// Walk every notation cell (in section/line/cell order) into a timed event
-    /// list plus a per-cell highlight schedule. Lyric lines are skipped but do
-    /// not advance the clock.
+    /// Walk the performance rows (the plan for structured forms, else every line
+    /// once) into a timed event list plus a per-cell highlight schedule. A row
+    /// may repeat and the same source line may recur (mukhda returns); every
+    /// cell is tagged with its row index so the now-playing screen highlights
+    /// the right row. Each play-through advances the clock by one avartan.
     static func buildTimeline(for composition: Composition, tonic: Int, bpm: Double) -> Timeline {
         let beat = 60 / bpm
         var notes: [NoteEvent] = []
         var cells: [CellStep] = []
         var t = 0.0
 
-        for (si, section) in composition.sections.enumerated() {
-            for (li, line) in section.lines.enumerated() {
-                guard line.type == .notation else { continue }
-                for (ci, box) in line.cells.enumerated() {
-                    cells.append(CellStep(loc: CellLocation(section: si, line: li, cell: ci),
-                                          start: t))
-                    let subs = box.text
-                        .split(whereSeparator: { $0.isWhitespace })
-                        .map(String.init)
-                    let subDur = beat / Double(max(subs.count, 1))
-                    for (j, tok) in subs.enumerated() {
-                        let start = t + Double(j) * subDur
-                        switch SwaraPitch.pitch(of: tok, tonic: tonic) {
-                        case .sustain:
-                            if !notes.isEmpty { notes[notes.count - 1].dur += subDur }
-                        case .note(let m):
-                            notes.append(NoteEvent(midi: m, start: start, dur: subDur))
-                        case .rest:
-                            break
-                        }
+        for (unitIdx, unit) in composition.performanceUnits().enumerated() {
+            guard composition.sections.indices.contains(unit.section),
+                  composition.sections[unit.section].lines.indices.contains(unit.line) else { continue }
+            let line = composition.sections[unit.section].lines[unit.line]
+            for (ci, box) in line.cells.enumerated() {
+                cells.append(CellStep(loc: CellLocation(section: unit.section, line: unit.line, cell: ci),
+                                      step: unitIdx, start: t))
+                let subs = box.text
+                    .split(whereSeparator: { $0.isWhitespace })
+                    .map(String.init)
+                let subDur = beat / Double(max(subs.count, 1))
+                for (j, tok) in subs.enumerated() {
+                    let start = t + Double(j) * subDur
+                    switch SwaraPitch.pitch(of: tok, tonic: tonic) {
+                    case .sustain:
+                        if !notes.isEmpty { notes[notes.count - 1].dur += subDur }
+                    case .note(let m):
+                        notes.append(NoteEvent(midi: m, start: start, dur: subDur))
+                    case .rest:
+                        break
                     }
-                    t += beat
                 }
+                t += beat
             }
         }
         return Timeline(notes: notes, cells: cells, total: t)
@@ -527,10 +572,13 @@ final class PlaybackEngine {
 enum SwaraPitch {
     enum Result { case note(Int), sustain, rest }
 
-    /// Semitone offset from Sa for each base letter.
+    /// Semitone offset from Sa for each base letter. Lowercase r/g/d/n are komal;
+    /// lowercase s/p/m are shudh (Sa/Pa/Ma have no komal), matching `SwaraMap`'s
+    /// glyphs so anything that renders as a note also plays. (A bare "s" is
+    /// caught as sustain before this map is consulted.)
     static let offset: [Character: Int] = [
-        "S": 0, "r": 1, "R": 2, "g": 3, "G": 4, "M": 5,
-        "P": 7, "d": 8, "D": 9, "n": 10, "N": 11,
+        "S": 0, "s": 0, "r": 1, "R": 2, "g": 3, "G": 4, "M": 5, "m": 5,
+        "P": 7, "p": 7, "d": 8, "D": 9, "n": 10, "N": 11,
     ]
 
     static func pitch(of raw: String, tonic: Int) -> Result {

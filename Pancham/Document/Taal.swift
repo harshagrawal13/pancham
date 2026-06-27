@@ -23,13 +23,12 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    /// Whether a playable tabla theka exists for this taal. For now only
-    /// Teentaal is supported, so a Teentaal notation can't be played to any
-    /// other taal's theka.
+    /// Whether a playable tabla theka exists for this taal. A notation is only
+    /// ever played to its own taal's theka.
     var hasTheka: Bool {
         switch self {
         case .teentaal, .teentaal_khali: return true
-        case .deepchandi:                return false
+        case .deepchandi:                return true
         }
     }
 

@@ -113,12 +113,14 @@ struct LibraryEditor: View {
             loadSelected(newURL)
         }
         .onAppear {
+            openPendingIfNeeded()
             if selectedURL == nil {
                 selectedURL = library.looseFiles.first?.url
                     ?? library.folders.flatMap(\.files).first?.url
             }
             loadSelected(selectedURL)
         }
+        .onChange(of: prefs.pendingOpenURL) { _, _ in openPendingIfNeeded() }
         .sheet(isPresented: $creatingFile) {
             NameSheet(
                 eyebrow: newFileTargetFolder.map { "New notation · \($0.name)" } ?? "New notation",
@@ -176,6 +178,15 @@ struct LibraryEditor: View {
         }
     }
 
+    /// Import + select a `.pancham` file opened from Finder, if one is waiting.
+    private func openPendingIfNeeded() {
+        guard let url = prefs.pendingOpenURL else { return }
+        prefs.pendingOpenURL = nil
+        if let dest = library.importFile(url) {
+            selectedURL = dest
+        }
+    }
+
     private func loadSelected(_ url: URL?) {
         saveTask?.cancel()
         guard let url else {
@@ -203,8 +214,8 @@ struct LibraryEditor: View {
         let comp = composition
         withObservationTracking {
             // Touch every observable field once to subscribe.
-            _ = comp.title; _ = comp.raga; _ = comp.taal; _ = comp.samOffset
-            _ = comp.laya; _ = comp.bpm; _ = comp.notes
+            _ = comp.title; _ = comp.raga; _ = comp.taal; _ = comp.form; _ = comp.samOffset
+            _ = comp.laya; _ = comp.bpm; _ = comp.notes; _ = comp.performance
             for s in comp.sections {
                 _ = s.name
                 for l in s.lines {
@@ -256,6 +267,8 @@ struct EditorPane: View {
     let onNewFile: () -> Void
     let onPerform: () -> Void
 
+    @State private var showPerformance = false
+
     var body: some View {
         VStack(spacing: 0) {
             toolbar
@@ -268,11 +281,13 @@ struct EditorPane: View {
                         .padding(.vertical, 28)
                         .frame(maxWidth: .infinity)
                 }
-                .environment(playback)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.canvas)
+        .sheet(isPresented: $showPerformance) {
+            PerformanceEditorView(composition: composition) { showPerformance = false }
+        }
         // A tonic / tempo change while playing re-renders the piece transposed.
         // These handlers live in the always-mounted editor pane so they fire
         // whether the change comes from here or the now-playing overlay.
@@ -282,8 +297,6 @@ struct EditorPane: View {
         .onChange(of: playback.tonicMidi) { _, _ in playback.applyTimingChange() }
         .onChange(of: playback.tempoOverride) { _, _ in playback.applyTempoChange() }
         .onChange(of: playback.instrument) { _, _ in playback.reloadInstrument() }
-        .onChange(of: playback.sustain) { _, _ in playback.applyTimingChange() }
-        .onChange(of: playback.fade) { _, _ in playback.applyTimingChange() }
         .onChange(of: playback.instrumentVolume) { _, _ in playback.applyVolumes() }
         .onChange(of: playback.tablaVolume) { _, _ in playback.applyVolumes() }
         .onChange(of: playback.tablaEnabled) { _, _ in playback.applyTimingChange() }
@@ -298,6 +311,28 @@ struct EditorPane: View {
         "\(noteNames[((midi % 12) + 12) % 12])\(midi / 12 - 1)"
     }
 
+    /// Small build marker so the production (Release) app is distinguishable
+    /// from a dev (Debug) build at a glance: dev shows "DEV", production shows
+    /// the version (e.g. "v1.0").
+    private var buildBadge: some View {
+        #if DEBUG
+        let text = "DEV"
+        let fg = Theme.danger
+        let bg = Theme.danger.opacity(0.12)
+        #else
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let text = "v\(version)"
+        let fg = Theme.muted
+        let bg = Color.clear
+        #endif
+        return Text(text)
+            .font(Theme.ui(9, weight: .medium)).tracking(1)
+            .foregroundStyle(fg)
+            .padding(.horizontal, 6).padding(.vertical, 2)
+            .background(bg)
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(fg.opacity(0.4), lineWidth: 1))
+    }
+
     private var toolbar: some View {
         HStack(alignment: .center, spacing: 14) {
             HStack(alignment: .lastTextBaseline, spacing: 14) {
@@ -308,6 +343,7 @@ struct EditorPane: View {
                     .font(Theme.deva(15))
                     .foregroundStyle(Theme.muted)
                     .tracking(0.5)
+                buildBadge
             }
             Spacer()
             if selectedURL != nil {
@@ -317,6 +353,10 @@ struct EditorPane: View {
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.muted)
                     .padding(.trailing, 4)
+                if composition.form.isStructured {
+                    Button("Performance") { showPerformance = true }
+                        .buttonStyle(ToolbarOutlineButton())
+                }
                 Button("+ Section") { composition.sections.append(CompositionSection(matras: composition.matras)) }
                     .buttonStyle(ToolbarOutlineButton())
                 Button(isRenderMode ? "Edit" : "Render") { isRenderMode.toggle() }
@@ -336,31 +376,17 @@ struct EditorPane: View {
     }
 
     private var playbackControls: some View {
-        HStack(spacing: 8) {
-            // Play opens the full-window now-playing screen (3-2-1 lead-in,
-            // scrolling lyrics) rather than sounding inline. SF Symbol renders
-            // regardless of the custom UI font (IBM Plex Sans has no ▶ glyph).
-            Button(action: onPerform) {
-                HStack(spacing: 5) {
-                    Image(systemName: "play.fill")
-                    Text("Play")
-                }
+        // Play opens the full-window now-playing screen (3-2-1 lead-in, scrolling
+        // lyrics). Tempo / Sa / voice live there, not in the editor. SF Symbol
+        // renders regardless of the custom UI font (IBM Plex Sans has no ▶ glyph).
+        Button(action: onPerform) {
+            HStack(spacing: 5) {
+                Image(systemName: "play.fill")
+                Text("Play")
             }
-            .buttonStyle(ToolbarOutlineButton())
-            .keyboardShortcut("p", modifiers: [.command, .shift])
-
-            Menu("\(Int(playback.effectiveBPM(for: composition))) BPM") {
-                Button("Score tempo (\(composition.bpm.isEmpty ? "—" : composition.bpm))") {
-                    playback.tempoOverride = nil
-                }
-                Divider()
-                ForEach([60, 80, 100, 120, 140, 160, 180, 200], id: \.self) { b in
-                    Button("\(b) BPM") { playback.tempoOverride = Double(b) }
-                }
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
         }
+        .buttonStyle(ToolbarOutlineButton())
+        .keyboardShortcut("p", modifiers: [.command, .shift])
     }
 
     private var emptyState: some View {

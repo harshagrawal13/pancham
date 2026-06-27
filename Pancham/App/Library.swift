@@ -124,6 +124,35 @@ final class Library {
         }
     }
 
+    /// Import an external `.pancham` file (e.g. opened from Finder). Files
+    /// already inside the library just get rescanned and returned; files from
+    /// elsewhere are copied into the library root (disambiguating the name).
+    /// Returns the URL to open, or `nil` on failure.
+    @discardableResult
+    func importFile(_ url: URL) -> URL? {
+        let fm = FileManager.default
+        let rootPath = root.standardizedFileURL.path
+        let incoming = url.standardizedFileURL
+        if incoming.path == rootPath || incoming.path.hasPrefix(rootPath + "/") {
+            reload()
+            return url
+        }
+        let base = sanitize(url.deletingPathExtension().lastPathComponent)
+        var dest = root.appendingPathComponent(base).appendingPathExtension("pancham")
+        var n = 2
+        while fm.fileExists(atPath: dest.path) {
+            dest = root.appendingPathComponent("\(base) \(n)").appendingPathExtension("pancham")
+            n += 1
+        }
+        do {
+            try fm.copyItem(at: incoming, to: dest)
+            reload()
+            return dest
+        } catch {
+            return nil
+        }
+    }
+
     @discardableResult
     func createFolder(named: String) -> URL? {
         let url = root.appendingPathComponent(sanitize(named), isDirectory: true)

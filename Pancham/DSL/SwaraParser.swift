@@ -53,11 +53,20 @@ enum SwaraParser {
                           mandra: mandra, taar: taar, sustain: false)
     }
 
+    /// Cache parsed cells by raw text. The same handful of token strings recur
+    /// across the grid and every render, so memoizing avoids re-parsing. Not
+    /// thread-safe on purpose — callers (SwiftUI bodies, the playback loop) are
+    /// all on the main thread.
+    private static var cache: [String: [SwaraToken]] = [:]
+
     /// Split a cell into whitespace-separated tokens and return the parsed
     /// swaras. Multi-swara cells are sized down by the caller.
     static func parse(cell raw: String) -> [SwaraToken] {
-        raw.split(whereSeparator: { $0.isWhitespace })
+        if let hit = cache[raw] { return hit }
+        let tokens = raw.split(whereSeparator: { $0.isWhitespace })
             .map(String.init)
             .compactMap(parseToken)
+        cache[raw] = tokens
+        return tokens
     }
 }

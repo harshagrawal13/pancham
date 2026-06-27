@@ -6,98 +6,78 @@ struct CellLocation: Hashable {
     let cell: Int
 }
 
-/// Single grid cell.
-///
-/// The `TextField` is always mounted while editing; we lay an opaque rendered
-/// overlay on top when the cell is unfocused and non-empty. Tapping the
-/// overlay sets `focused = true`, which both grants focus to the already-live
-/// TextField *and* hides the overlay — no mount race, no flash of raw DSL.
+/// Which cell is currently being edited, shared across the whole grid via the
+/// environment. This is the key to editor performance: only ONE `TextField`
+/// (an NSTextField under the hood) is ever mounted — every other cell is cheap
+/// static text. Hundreds of always-live text fields was the lag source.
+@Observable
+final class EditorFocus {
+    var editing: CellLocation?
+}
+
+/// Single grid cell. Static rendered text until tapped, then a `TextField`.
 struct CellView: View {
     @Bindable var cell: CellBox
     let type: LineType
     let isRenderMode: Bool
     let location: CellLocation
-    let onAdvance: (CellLocation) -> Void
+    /// Number of cells in this line, for Tab/Return advance.
+    let lineLength: Int
 
-    @FocusState private var focused: Bool
-    @Environment(PlaybackEngine.self) private var playback: PlaybackEngine?
+    @Environment(EditorFocus.self) private var focus
+    @FocusState private var fieldFocused: Bool
 
-    private var isPlayingHere: Bool { playback?.current == location }
+    private var isEditing: Bool { focus.editing == location }
 
     var body: some View {
         Group {
-            if isRenderMode {
-                renderedReadOnly
+            if !isRenderMode && isEditing {
+                editingField
             } else {
-                editableCell
+                rendered
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture { if !isRenderMode { focus.editing = location } }
             }
         }
         .frame(minHeight: 42)
-        .clipped()   // keep the focused TextField from bleeding over neighbours
-        // Translucent wash sits above the (opaque) rendered overlay so the
-        // playback cursor shows in both edit and render modes.
-        .overlay {
-            if isPlayingHere {
-                Theme.accent.opacity(0.16).allowsHitTesting(false)
-            }
-        }
-        .animation(.easeOut(duration: 0.08), value: isPlayingHere)
+        .clipped()
     }
 
-    // MARK: Edit mode
-
-    private var editableCell: some View {
-        ZStack {
-            TextField("", text: $cell.text)
-                .textFieldStyle(.plain)
-                .multilineTextAlignment(.center)
-                .font(type == .notation ? Theme.mono(12) : Theme.deva(14))
-                .foregroundStyle(type == .notation ? Theme.ink : Theme.muted)
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity)
-                .focused($focused)
-                .onSubmit {
-                    focused = false
-                    onAdvance(location)
-                }
-
-            if showRendered {
-                renderedOverlay
-            }
-        }
+    private var editingField: some View {
+        TextField("", text: $cell.text)
+            .textFieldStyle(.plain)
+            .multilineTextAlignment(.center)
+            .font(type == .notation ? Theme.mono(12) : Theme.deva(14))
+            .foregroundStyle(type == .notation ? Theme.ink : Theme.muted)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .focused($fieldFocused)
+            .onAppear { fieldFocused = true }
+            .onSubmit(advance)
+            .onExitCommand { focus.editing = nil }
     }
-
-    private var showRendered: Bool {
-        !focused && !cell.text.isEmpty && cell.text.first != " "
-    }
-
-    private var renderedOverlay: some View {
-        Group {
-            if type == .notation {
-                RenderedCell(raw: cell.text)
-            } else {
-                Text(cell.text)
-                    .font(Theme.deva(14))
-                    .foregroundStyle(Theme.muted)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.gridBg)  // opaque — hides the TextField beneath
-        .contentShape(Rectangle())
-        .onTapGesture { focused = true }
-    }
-
-    // MARK: Render mode (read-only)
 
     @ViewBuilder
-    private var renderedReadOnly: some View {
-        if type == .notation {
+    private var rendered: some View {
+        if cell.text.isEmpty {
+            Color.clear
+        } else if type == .notation {
             RenderedCell(raw: cell.text)
         } else {
             Text(cell.text)
                 .font(Theme.deva(14))
                 .foregroundStyle(Theme.muted)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func advance() {
+        if location.cell + 1 < lineLength {
+            focus.editing = CellLocation(section: location.section,
+                                         line: location.line,
+                                         cell: location.cell + 1)
+        } else {
+            focus.editing = nil
         }
     }
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00E03BEC48A950A3E2E9DA0A /* PerformanceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */; };
 		0C8D26F0E64FA0A1C6E89DFC /* PanchamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0361C25F57AA062E3D16EECD /* PanchamApp.swift */; };
 		113F435C45DBCB7BEFB8AEAE /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C1D3904E05B5497CCEEF32 /* NotesView.swift */; };
 		137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91AC2363B881B80866FB0998 /* UserPickerView.swift */; };
@@ -69,6 +70,7 @@
 		D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaHeaderView.swift; sourceTree = "<group>"; };
 		DAFB46DA9CB1641F3498029F /* tabla.sf2 */ = {isa = PBXFileReference; path = tabla.sf2; sourceTree = "<group>"; };
 		EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taal.swift; sourceTree = "<group>"; };
+		EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceEditorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -138,6 +140,7 @@
 				3086601BA8121576F9CAB43A /* NowPlayingView.swift */,
 				83587F3407B45EF8C728AE9C /* OnboardingView.swift */,
 				19E100E422285CF28DFC5160 /* PanchamLogo.swift */,
+				EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */,
 				0EA7203A312C5EA5150CBEFF /* RootView.swift */,
 				1D47E328242951C82246D193 /* SectionView.swift */,
 				64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */,
@@ -277,6 +280,7 @@
 				CA441298DE1D36A385944FE3 /* OnboardingView.swift in Sources */,
 				0C8D26F0E64FA0A1C6E89DFC /* PanchamApp.swift in Sources */,
 				E07A5788392DB67DF4C32514 /* PanchamLogo.swift in Sources */,
+				00E03BEC48A950A3E2E9DA0A /* PerformanceEditorView.swift in Sources */,
 				7E0E9B7CAAF45C9270BE822A /* PlaybackEngine.swift in Sources */,
 				ECB20A3EE2A5628B7C760050 /* Preferences.swift in Sources */,
 				C6B965966DF247B822E6B0AF /* RootView.swift in Sources */,

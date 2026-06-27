@@ -27,6 +27,10 @@ final class Preferences {
     private(set) var users: [PanchamUser]
     private(set) var activeUser: PanchamUser?
 
+    /// A `.pancham` file opened from Finder, waiting to be imported + shown by
+    /// the library once it's on screen. Cleared after it's consumed.
+    var pendingOpenURL: URL?
+
     var activeFolder: URL? { activeUser?.folderURL }
 
     private init() {

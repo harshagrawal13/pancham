@@ -19,46 +19,58 @@ struct KaraokeCell {
 /// matra) so the taal grid and beat are preserved, not collapsed to a phrase.
 struct KaraokeLine: Identifiable {
     let id = UUID()
+    /// Performance-row index this karaoke line represents (matched against
+    /// `PlaybackEngine.currentStep`). A source line recurs across rows (mukhda
+    /// returns), each a distinct row.
+    let stepIndex: Int
     let section: Int
-    /// Index of the source notation line, matched against `CellLocation.line`.
     let notationLine: Int
     let sectionName: String
     let isSectionStart: Bool
     /// Label shown in the gutter — the line's annotation, or its auto number.
     let displayLabel: String
+    /// Whether this line has any lyric syllables (else its notes render larger).
+    let hasLyrics: Bool
     /// One entry per matra (padded to the taal's matra count).
     let cells: [KaraokeCell]
 
-    /// Walk a composition into karaoke lines, pairing each notation line with
-    /// the lyric line that follows it and numbering notation lines per section.
+    /// Walk a composition's fully expanded performance units into karaoke lines
+    /// — one row per repeat, in performance order, so the mukhda recurs and a
+    /// ×2 step shows as two copies that play linearly. Each row pairs its
+    /// notation line with the following lyric line.
     static func build(_ comp: Composition) -> [KaraokeLine] {
         let matras = comp.matras
         var out: [KaraokeLine] = []
-        for (si, section) in comp.sections.enumerated() {
-            let lines = section.lines
-            var firstInSection = true
-            var number = 0
-            for (li, line) in lines.enumerated() where line.type == .notation {
-                number += 1
-                let lyric: Line? = (li + 1 < lines.count && lines[li + 1].type == .lyric)
-                    ? lines[li + 1] : nil
-                var cells: [KaraokeCell] = []
-                for ci in 0..<matras {
-                    let note = ci < line.cells.count
-                        ? line.cells[ci].text.trimmingCharacters(in: .whitespaces) : ""
-                    let syl: String = {
-                        guard let lyric, ci < lyric.cells.count else { return "" }
-                        return lyric.cells[ci].text.trimmingCharacters(in: .whitespaces)
-                    }()
-                    cells.append(KaraokeCell(note: note, syllable: syl))
-                }
-                let label = line.label.isEmpty ? "\(number)" : line.label
-                out.append(KaraokeLine(section: si, notationLine: li,
-                                       sectionName: section.name,
-                                       isSectionStart: firstInSection,
-                                       displayLabel: label, cells: cells))
-                firstInSection = false
+        var prevSection: Int? = nil
+        for (idx, unit) in comp.performanceUnits().enumerated() {
+            guard comp.sections.indices.contains(unit.section),
+                  comp.sections[unit.section].lines.indices.contains(unit.line) else { continue }
+            let section = comp.sections[unit.section]
+            let line = section.lines[unit.line]
+            guard line.type == .notation else { continue }
+            let lyric: Line? = (unit.line + 1 < section.lines.count
+                                && section.lines[unit.line + 1].type == .lyric)
+                ? section.lines[unit.line + 1] : nil
+            var cells: [KaraokeCell] = []
+            var anyLyric = false
+            for ci in 0..<matras {
+                let note = ci < line.cells.count
+                    ? line.cells[ci].text.trimmingCharacters(in: .whitespaces) : ""
+                let syl: String = {
+                    guard let lyric, ci < lyric.cells.count else { return "" }
+                    return lyric.cells[ci].text.trimmingCharacters(in: .whitespaces)
+                }()
+                if !syl.isEmpty { anyLyric = true }
+                cells.append(KaraokeCell(note: note, syllable: syl))
             }
+            let nIndices = comp.notationLineIndices(in: unit.section)
+            let num = (nIndices.firstIndex(of: unit.line) ?? 0) + 1
+            let label = line.label.isEmpty ? "\(num)" : line.label
+            out.append(KaraokeLine(stepIndex: idx, section: unit.section, notationLine: unit.line,
+                                   sectionName: section.name,
+                                   isSectionStart: prevSection != unit.section,
+                                   displayLabel: label, hasLyrics: anyLyric, cells: cells))
+            prevSection = unit.section
         }
         return out
     }
@@ -82,13 +94,12 @@ struct NowPlayingView: View {
     private var current: CellLocation? { playback.current }
 
     private var activeLineID: UUID? {
-        guard let cur = current else { return nil }
-        return lines.first { $0.section == cur.section && $0.notationLine == cur.line }?.id
+        guard let step = playback.currentStep else { return nil }
+        return lines.first { $0.stepIndex == step }?.id
     }
 
     private func activeCell(for line: KaraokeLine) -> Int? {
-        guard let cur = current,
-              cur.section == line.section, cur.line == line.notationLine else { return nil }
+        guard playback.currentStep == line.stepIndex, let cur = current else { return nil }
         return cur.cell
     }
 
@@ -134,7 +145,9 @@ struct NowPlayingView: View {
                                     .padding(.top, 14)
                             }
                             KaraokeRowView(line: line, taal: taal,
-                                           activeCell: activeCell(for: line))
+                                           activeCell: activeCell(for: line),
+                                           seekable: playback.isPaused,
+                                           onSeek: { step, cell in playback.seek(step: step, cell: cell) })
                         }
                         .frame(maxWidth: npContentWidth)
                         .frame(maxWidth: .infinity)
@@ -156,34 +169,35 @@ struct NowPlayingView: View {
     // MARK: Sticky taal header (markers + beat numbers)
 
     private var taalHeader: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 2) {
             HStack(spacing: 0) {
                 Color.clear.frame(width: npGutter)
                 ForEach(0..<taal.matras, id: \.self) { i in
                     let marker = i < taal.markers.count ? taal.markers[i] : ""
-                    Text(marker.isEmpty ? "·" : marker)
-                        .font(Theme.deva(16, weight: .medium))
-                        .foregroundStyle(marker.isEmpty ? .clear : Theme.ink)
+                    Text(marker)
+                        .font(Theme.display(15, weight: .medium))
+                        .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity)
                         .overlay(GridDivider(i: i, taal: taal))
                 }
             }
+            .frame(height: 20)
             HStack(spacing: 0) {
                 Color.clear.frame(width: npGutter)
                 ForEach(0..<taal.matras, id: \.self) { i in
                     Text("\(i + 1)")
-                        .font(Theme.ui(15, weight: .medium))
-                        .foregroundStyle(Theme.ink.opacity(0.7))
+                        .font(Theme.ui(12, weight: .medium))
+                        .foregroundStyle(Theme.muted)
                         .frame(maxWidth: .infinity)
                         .overlay(GridDivider(i: i, taal: taal))
                 }
             }
-            .padding(.top, 5)
+            .frame(height: 16)
         }
         .frame(maxWidth: npContentWidth)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, npHPadding)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
         .background(.ultraThinMaterial)
         .overlay(alignment: .bottom) {
             Rectangle().fill(Theme.ink).frame(height: 1)
@@ -245,7 +259,7 @@ struct NowPlayingView: View {
             }
             .buttonStyle(ToolbarToggleButton(on: playback.tablaEnabled && taal.hasTheka))
             .disabled(!taal.hasTheka)
-            .help(taal.hasTheka ? "Play the \(taal.name) theka" : "Theka is available for Teentaal only, for now")
+            .help(taal.hasTheka ? "Play the \(taal.name) theka" : "No theka for this taal yet")
 
             tempoControl
 
@@ -316,14 +330,6 @@ struct NowPlayingView: View {
 
             sliderRow("Instrument volume", value: $playback.instrumentVolume, range: 0...1)
             sliderRow("Tabla volume", value: $playback.tablaVolume, range: 0...1)
-            sliderRow("Sustain", value: $playback.sustain, range: 0...1)
-            sliderRow("Fade", value: $playback.fade, range: 0...0.5)
-
-            Text("Sustain rings each note past its beat. Fade swells each note in and out.")
-                .font(Theme.ui(10))
-                .foregroundStyle(Theme.muted)
-                .frame(width: 240, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(18)
         .frame(width: 280)
@@ -397,6 +403,9 @@ private struct KaraokeRowView: View {
     let taal: TaalID
     /// Active matra column if this line is sounding, else `nil`.
     let activeCell: Int?
+    /// When paused, tapping a cell seeks there and resumes.
+    let seekable: Bool
+    let onSeek: (Int, Int) -> Void
 
     private var isActive: Bool { activeCell != nil }
 
@@ -413,9 +422,12 @@ private struct KaraokeRowView: View {
             ForEach(0..<taal.matras, id: \.self) { ci in
                 KaraokeCellView(cell: line.cells[ci],
                                 active: activeCell == ci,
-                                lineActive: isActive)
+                                lineActive: isActive,
+                                bigNotes: !line.hasLyrics)
                     .frame(maxWidth: .infinity)
                     .overlay(GridDivider(i: ci, taal: taal))
+                    .contentShape(Rectangle())
+                    .onTapGesture { if seekable { onSeek(line.stepIndex, ci) } }
             }
         }
         .opacity(isActive ? 1 : 0.32)
@@ -427,17 +439,21 @@ private struct KaraokeCellView: View {
     let cell: KaraokeCell
     let active: Bool
     let lineActive: Bool
+    /// No lyric on this line — render the notes larger and drop the empty row.
+    let bigNotes: Bool
 
     var body: some View {
         VStack(spacing: 4) {
             noteView
-            Text(cell.syllable.isEmpty ? " " : cell.syllable)
-                .font(syllableFont)
-                .foregroundStyle(active ? Theme.accent : Theme.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+            if !bigNotes {
+                Text(cell.syllable.isEmpty ? " " : cell.syllable)
+                    .font(syllableFont)
+                    .foregroundStyle(active ? Theme.accent : Theme.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
         }
-        .frame(maxWidth: .infinity, minHeight: 60)
+        .frame(maxWidth: .infinity, minHeight: bigNotes ? 52 : 60)
         .padding(.vertical, 6)
         .background {
             if active {
@@ -452,10 +468,10 @@ private struct KaraokeCellView: View {
         let tokens = SwaraParser.parse(cell: cell.note)
         HStack(spacing: 2) {
             ForEach(Array(tokens.enumerated()), id: \.offset) { _, tok in
-                SwaraView(tok: tok, baseSize: 15)
+                SwaraView(tok: tok, baseSize: bigNotes ? 28 : 15)
             }
         }
-        .frame(height: 24)
+        .frame(height: bigNotes ? 40 : 24)
         .opacity(cell.note.isEmpty ? 0 : 1)
     }
 

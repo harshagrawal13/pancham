@@ -20,11 +20,34 @@ struct MetaHeaderView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Eyebrow
-            HStack {
-                Text("Bandish\(composition.raga.isEmpty ? "" : " · " + composition.raga)")
-                    .font(Theme.ui(10)).tracking(2.5).textCase(.uppercase)
-                    .foregroundStyle(Theme.muted)
+            // Eyebrow — form picker + raga
+            HStack(spacing: 6) {
+                if isRenderMode {
+                    Text(composition.form.name)
+                        .font(Theme.ui(10)).tracking(2.5).textCase(.uppercase)
+                        .foregroundStyle(Theme.muted)
+                } else {
+                    Menu {
+                        ForEach(CompositionForm.allCases) { f in
+                            Button(f.name) { composition.form = f }
+                        }
+                    } label: {
+                        HStack(spacing: 3) {
+                            Text(composition.form.name)
+                                .font(Theme.ui(10)).tracking(2.5).textCase(.uppercase)
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 7, weight: .semibold))
+                        }
+                        .foregroundStyle(Theme.accent)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
+                if !composition.raga.isEmpty {
+                    Text("· \(composition.raga)")
+                        .font(Theme.ui(10)).tracking(2.5).textCase(.uppercase)
+                        .foregroundStyle(Theme.muted)
+                }
                 Spacer()
                 Text(folioLine)
                     .font(Theme.ui(10)).tracking(2.5).textCase(.uppercase)

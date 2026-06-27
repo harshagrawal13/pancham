@@ -20,9 +20,12 @@ enum TablaKey {
     static let dhin:   UInt8 = 36
 }
 
-/// A tabla bol, resolved to its sample stroke(s). Dha and Dhin are dedicated
-/// recorded strokes (already both-drum); Tin is the ringing dayan tuned to Sa;
-/// Ta/Na are the rim stroke.
+/// A tabla bol, resolved to its sample stroke(s). Dha and Dhin are both-drum
+/// composites built from the ringing mmiron strokes so they match Tin/Ta's
+/// mellow character:
+///   Dha  = Ge (bayan) + Na-open (the ringing dayan rim stroke)
+///   Dhin = Ge (bayan) + Tin (the ringing dayan, tuned to Sa)
+/// Tin is the ringing dayan alone; Ta/Na are the rim stroke.
 enum TablaBol {
     case dha, dhin, tin, ta, na, tit, ke, ge, rest
 
@@ -34,10 +37,13 @@ enum TablaBol {
         case .tit:     return [.fixed(TablaKey.te)]
         case .na, .ta: return [.fixed(TablaKey.na)]
         case .tin:     return [.tuned]
-        case .dha:     return [.fixed(TablaKey.dha)]
-        case .dhin:    return [.fixed(TablaKey.dhin)]
+        case .dha:     return [.fixed(TablaKey.ghe), .fixed(TablaKey.naOpen)]
+        case .dhin:    return [.fixed(TablaKey.ghe), .tuned]
         }
     }
+
+    /// Extra lead (seconds) for this bol on top of the global tabla lead.
+    var extraLead: Double { 0 }
 }
 
 /// The theka (cyclic stroke pattern) for each taal. Length matches the taal's
@@ -52,11 +58,9 @@ enum Theka {
                     .dha, .tin,  .tin,  .ta,
                     .ta,  .dhin, .dhin, .dha]
         case .deepchandi:
-            // 14 matras (3+4+3+4): Dha Dhin – | Dha Dha Tin – | Ta Tin – | Dha Dha Dhin –
-            return [.dha, .dhin, .rest,
-                    .dha, .dha,  .tin, .rest,
-                    .ta,  .tin,  .rest,
-                    .dha, .dha,  .dhin, .rest]
+            // Simplified: Dha Dhin Dhin Dha Dhin Dha Dhin — a 7-bol pattern
+            // that cycles twice across the 14 matras (one bol per beat).
+            return [.dha, .dhin, .dhin, .dha, .dhin, .dha, .dhin]
         }
     }
 }

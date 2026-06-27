@@ -5,11 +5,14 @@ struct EditorView: View {
     @Bindable var composition: Composition
     let isRenderMode: Bool
 
+    /// Single shared edit-focus, so only one TextField mounts across the grid.
+    @State private var focus = EditorFocus()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             MetaHeaderView(composition: composition, isRenderMode: isRenderMode)
 
-            VStack(alignment: .leading, spacing: 32) {
+            LazyVStack(alignment: .leading, spacing: 32) {
                 ForEach(Array(composition.sections.enumerated()), id: \.element.id) { idx, section in
                     SectionView(
                         section: section,
@@ -35,6 +38,7 @@ struct EditorView: View {
         .padding(.init(top: 52, leading: 64, bottom: 48, trailing: 64))
         .frame(maxWidth: 860)
         .paperBackground()
+        .environment(focus)
     }
 
     private func removeSection(id: UUID) {

@@ -7,6 +7,7 @@ struct PanchamApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(prefs: prefs)
+                .onOpenURL { url in prefs.pendingOpenURL = url }
         }
         .commands {
             CommandGroup(replacing: .newItem) { EmptyView() }

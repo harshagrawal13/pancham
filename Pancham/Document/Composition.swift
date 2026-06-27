@@ -95,37 +95,88 @@ final class CompositionSection: Identifiable, Codable {
     }
 }
 
+/// The musical form of a sheet. The "structured" forms (sargam geet, chota
+/// khayal) follow a return-to-mukhda performance order; the others play through.
+enum CompositionForm: String, Codable, CaseIterable, Identifiable {
+    case sargamGeet
+    case chotaKhayal
+    case bandish
+    case bollywoodSong
+
+    var id: String { rawValue }
+    var name: String {
+        switch self {
+        case .sargamGeet:    return "Sargam Geet"
+        case .chotaKhayal:   return "Chota Khayal"
+        case .bandish:       return "Bandish"
+        case .bollywoodSong: return "Bollywood Song"
+        }
+    }
+    /// Whether this form plays with the mukhda-return structure.
+    var isStructured: Bool {
+        switch self {
+        case .sargamGeet, .chotaKhayal: return true
+        case .bandish, .bollywoodSong:  return false
+        }
+    }
+}
+
+/// One step of a structured performance: play notation line `line` of section
+/// `section`, `repeats` times. The order of steps (and re-references to the
+/// mukhda) defines the return-to-refrain arc.
+struct PerformanceStep: Codable, Identifiable, Hashable {
+    var id: UUID
+    var section: Int
+    var line: Int
+    var repeats: Int
+
+    init(id: UUID = UUID(), section: Int, line: Int, repeats: Int = 1) {
+        self.id = id
+        self.section = section
+        self.line = line
+        self.repeats = max(1, repeats)
+    }
+}
+
 @Observable
 final class Composition: Codable {
     var title: String
     var raga: String
     var taal: TaalID
+    var form: CompositionForm
     var samOffset: Int
     var laya: String
     var bpm: String
     var notes: String
     var sections: [CompositionSection]
+    /// Custom performance order for structured forms. Empty = use the generated
+    /// default (mukhda-return structure).
+    var performance: [PerformanceStep]
 
     init(title: String = "",
          raga: String = "",
          taal: TaalID = .teentaal,
+         form: CompositionForm = .bandish,
          samOffset: Int = 1,
          laya: String = "",
          bpm: String = "",
          notes: String = "",
-         sections: [CompositionSection]? = nil) {
+         sections: [CompositionSection]? = nil,
+         performance: [PerformanceStep] = []) {
         self.title = title
         self.raga = raga
         self.taal = taal
+        self.form = form
         self.samOffset = samOffset
         self.laya = laya
         self.bpm = bpm
         self.notes = notes
         self.sections = sections ?? [CompositionSection(matras: taal.matras)]
+        self.performance = performance
     }
 
     enum CodingKeys: String, CodingKey {
-        case title, raga, taal, samOffset, laya, bpm, notes, sections
+        case title, raga, taal, form, samOffset, laya, bpm, notes, sections, performance
     }
 
     required convenience init(from decoder: Decoder) throws {
@@ -134,11 +185,13 @@ final class Composition: Codable {
             title:     (try? c.decodeIfPresent(String.self,  forKey: .title))     ?? "",
             raga:      (try? c.decodeIfPresent(String.self,  forKey: .raga))      ?? "",
             taal:      (try? c.decodeIfPresent(TaalID.self,  forKey: .taal))      ?? .teentaal,
+            form:      (try? c.decodeIfPresent(CompositionForm.self, forKey: .form)) ?? .bandish,
             samOffset: (try? c.decodeIfPresent(Int.self,     forKey: .samOffset)) ?? 1,
             laya:      (try? c.decodeIfPresent(String.self,  forKey: .laya))      ?? "",
             bpm:       (try? c.decodeIfPresent(String.self,  forKey: .bpm))       ?? "",
             notes:     (try? c.decodeIfPresent(String.self,  forKey: .notes))     ?? "",
-            sections:  (try? c.decodeIfPresent([CompositionSection].self, forKey: .sections)) ?? nil
+            sections:  (try? c.decodeIfPresent([CompositionSection].self, forKey: .sections)) ?? nil,
+            performance: (try? c.decodeIfPresent([PerformanceStep].self, forKey: .performance)) ?? []
         )
     }
 
@@ -147,11 +200,93 @@ final class Composition: Codable {
         try c.encode(title,     forKey: .title)
         try c.encode(raga,      forKey: .raga)
         try c.encode(taal,      forKey: .taal)
+        try c.encode(form,      forKey: .form)
         try c.encode(samOffset, forKey: .samOffset)
         try c.encode(laya,      forKey: .laya)
         try c.encode(bpm,       forKey: .bpm)
         try c.encode(notes,     forKey: .notes)
         try c.encode(sections,  forKey: .sections)
+        if !performance.isEmpty { try c.encode(performance, forKey: .performance) }
+    }
+}
+
+// MARK: - Performance structure
+
+extension Composition {
+    /// Notation-line indices (into `section.lines`) of a section, in order.
+    func notationLineIndices(in section: Int) -> [Int] {
+        guard sections.indices.contains(section) else { return [] }
+        return sections[section].lines.enumerated()
+            .filter { $0.element.type == .notation }.map { $0.offset }
+    }
+
+    /// The mukhda — the first notation line of the first section that has one.
+    var mukhda: (section: Int, line: Int)? {
+        for si in sections.indices {
+            if let li = notationLineIndices(in: si).first { return (si, li) }
+        }
+        return nil
+    }
+
+    /// The default mukhda-return performance: each section's lines (its first
+    /// line twice), with a return to the mukhda after every section, closing on
+    /// the mukhda (Sam).
+    func defaultPerformanceSteps() -> [PerformanceStep] {
+        guard let mukhda else { return [] }
+        var steps: [PerformanceStep] = []
+        for si in sections.indices {
+            let lines = notationLineIndices(in: si)
+            guard !lines.isEmpty else { continue }
+            for (idx, li) in lines.enumerated() {
+                steps.append(PerformanceStep(section: si, line: li, repeats: idx == 0 ? 2 : 1))
+            }
+            steps.append(PerformanceStep(section: mukhda.section, line: mukhda.line, repeats: 1))
+        }
+        return steps
+    }
+
+    func isValidStep(_ s: PerformanceStep) -> Bool {
+        sections.indices.contains(s.section)
+            && sections[s.section].lines.indices.contains(s.line)
+            && sections[s.section].lines[s.line].type == .notation
+    }
+
+    /// The step list actually in effect: the custom `performance` (valid steps
+    /// only) if any, else the generated default.
+    func effectivePerformanceSteps() -> [PerformanceStep] {
+        let valid = performance.filter(isValidStep)
+        return valid.isEmpty ? defaultPerformanceSteps() : valid
+    }
+
+    /// The ordered "rows" that a play-through visits — one per performance step
+    /// (each may repeat). Structured forms use the plan; others list every
+    /// notation line once. Both the audio timeline and the now-playing screen
+    /// walk this, so the cursor and the karaoke rows line up.
+    func performanceRows() -> [PerformanceStep] {
+        if form.isStructured {
+            let steps = effectivePerformanceSteps()
+            if !steps.isEmpty { return steps }
+        }
+        return linearLineRefs().map { PerformanceStep(section: $0.section, line: $0.line, repeats: 1) }
+    }
+
+    /// The fully expanded play order — one entry per repeat, so a ×2 step becomes
+    /// two consecutive units. Both the audio timeline and the now-playing rows
+    /// walk this, so repeats show as duplicated lines that play linearly.
+    func performanceUnits() -> [(section: Int, line: Int)] {
+        var units: [(section: Int, line: Int)] = []
+        for row in performanceRows() {
+            for _ in 0..<max(1, row.repeats) { units.append((row.section, row.line)) }
+        }
+        return units
+    }
+
+    func linearLineRefs() -> [(section: Int, line: Int)] {
+        var refs: [(section: Int, line: Int)] = []
+        for si in sections.indices {
+            for li in notationLineIndices(in: si) { refs.append((si, li)) }
+        }
+        return refs
     }
 }
 
