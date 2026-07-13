@@ -61,6 +61,9 @@ enum Theka {
             // Simplified: Dha Dhin Dhin Dha Dhin Dha Dhin — a 7-bol pattern
             // that cycles twice across the 14 matras (one bol per beat).
             return [.dha, .dhin, .dhin, .dha, .dhin, .dha, .dhin]
+        case .kaharwa:
+            // 8 matras (4+4): Dha Ge Na Tin | Ka Dhin Na Tin
+            return [.dha, .ge, .na, .tin, .ke, .dhin, .na, .tin]
         }
     }
 }

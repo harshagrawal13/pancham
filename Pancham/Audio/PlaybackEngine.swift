@@ -436,6 +436,9 @@ final class PlaybackEngine {
         guard !soundLoaded else { return }
         soundLoaded = true
         loadInstrumentSound()
+        // Boost the tabla to sit alongside the (gain-boosted) melodic voices —
+        // without it the theka is buried under e.g. soft strings (+10 dB).
+        tablaSampler.overallGain = 6
         // Real bols: bundled tabla.sf2 (CC0 mmiron pack). Dry strokes sit on
         // fixed keys; the ringing dayan has a wide zone so playing Sa tunes it.
         if let sf2 = Bundle.main.url(forResource: "tabla", withExtension: "sf2") {

@@ -4,6 +4,7 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
     case teentaal
     case teentaal_khali
     case deepchandi
+    case kaharwa
 
     var id: String { rawValue }
 
@@ -12,6 +13,7 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         case .teentaal:        return "Teentaal (16)"
         case .teentaal_khali:  return "Teentaal — from Khali (16)"
         case .deepchandi:      return "Deepchandi (14)"
+        case .kaharwa:         return "Keherwa (8)"
         }
     }
 
@@ -20,6 +22,7 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         switch self {
         case .teentaal, .teentaal_khali: return "Teentaal"
         case .deepchandi:                return "Deepchandi"
+        case .kaharwa:                   return "Keherwa"
         }
     }
 
@@ -29,6 +32,7 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         switch self {
         case .teentaal, .teentaal_khali: return true
         case .deepchandi:                return true
+        case .kaharwa:                   return true
         }
     }
 
@@ -36,6 +40,7 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         switch self {
         case .teentaal, .teentaal_khali: return 16
         case .deepchandi:                return 14
+        case .kaharwa:                   return 8
         }
     }
 
@@ -44,6 +49,7 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         case .teentaal:        return ["X","","","","2","","","","0","","","","3","","",""]
         case .teentaal_khali:  return ["0","","","","3","","","","X","","","","2","","",""]
         case .deepchandi:      return ["X","","","2","","","","0","","","3","","",""]
+        case .kaharwa:         return ["X","","","","0","","",""]
         }
     }
 
@@ -52,6 +58,7 @@ enum TaalID: String, Codable, CaseIterable, Identifiable, Hashable {
         switch self {
         case .teentaal, .teentaal_khali: return [4, 4, 4, 4]
         case .deepchandi:                return [3, 4, 3, 4]
+        case .kaharwa:                   return [4, 4]
         }
     }
 

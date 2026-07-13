@@ -227,6 +227,7 @@ struct MetaHeaderView: View {
         case .teentaal:        return "Teentaal"
         case .teentaal_khali:  return "Teentaal (Khali)"
         case .deepchandi:      return "Deepchandi"
+        case .kaharwa:         return "Keherwa"
         }
     }
 }

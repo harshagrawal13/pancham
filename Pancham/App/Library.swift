@@ -86,12 +86,7 @@ final class Library {
                                raga: "", taal: "", laya: "")
         }
         let title = comp.title.isEmpty ? name : comp.title
-        let taal: String = {
-            switch comp.taal {
-            case .teentaal, .teentaal_khali: return "Teentaal"
-            case .deepchandi: return "Deepchandi"
-            }
-        }()
+        let taal = comp.taal.name
         return LibraryFile(id: url, url: url,
                            displayName: title,
                            raga: comp.raga,
