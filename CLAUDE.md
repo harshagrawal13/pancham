@@ -1,48 +1,49 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Notes for Claude Code working in this repo.
 
 ## What this is
 
-Pancham is a static web app for writing Hindustani classical music notations in the Bhatkhande system. No build step, no package manager — three plain `.js` files loaded by `index.html`, backed by Supabase for auth + storage.
+Pancham is a native macOS SwiftUI app for writing Hindustani classical notations in the Bhatkhande system. Each notation is a `.pancham` file (JSON under the hood). macOS 15 Sequoia minimum.
 
-## Running locally
+## Build
 
 ```
-cp .env.example .env    # then fill in SUPABASE_URL + SUPABASE_ANON_KEY
-./build-config.sh       # writes config.js from .env
-python3 -m http.server 8000
+xcodegen generate
+xcodebuild -project Pancham.xcodeproj -scheme Pancham -destination 'platform=macOS' build
 ```
 
-Then open `http://localhost:8000`. `build-config.sh` must be re-run whenever `.env` changes. The backend schema (tables `folders` and `notations`, RLS policies) is documented in the header comment of `drive.js` and must be applied manually in the Supabase SQL editor.
-
-There are no tests, no linter, no build.
+`xcodegen` is required to regenerate the project from `project.yml`. Install it with `brew install xcodegen`. `Pancham.xcodeproj` is checked in, so a fresh clone can be opened in Xcode without running xcodegen first.
 
 ## Architecture
 
-Three globals-based scripts share state by loading into the same window, in this order: `drive.js` → `sidebar.js` → `app.js`.
+Single target `Pancham`, built from source under `Pancham/`:
 
-- **`app.js`** — editor core. Owns the single `state` object (title, raga, taal, laya, bpm, notes, sections[]). Each section has `lines[]`; each line has `type` (`notation` | `lyric`) and 16 `cells`. Parsing of the Bhatkhande input DSL happens in `parseToken`/`parseCell`; rendering to Devanagari swaras with komal/tivra/mandra/taar classes happens in `renderSwara`/`renderCell`. Auto-save runs on a 5s interval via `startAutoSave` when `isDirty && currentFileId`.
-- **`drive.js`** — Supabase client + data layer. Despite the name (legacy from a Google Drive backend), this talks to Supabase Postgres. Exposes `db*` functions and `drive*` aliases kept for backward compat with `sidebar.js`/`app.js` call sites. Also owns `currentUsername` and the `setUsername`/`loadUsername`/`clearUsername` helpers — rows are scoped by a plain-text `username` column (no Supabase Auth).
-- **`sidebar.js`** — file-tree UI. Owns `fileTree` (expanded set, cached nodes per folder, selected folder) plus the module-level `currentFileId`/`currentFileName` that `app.js` reads and mutates directly.
+- `App/PanchamApp.swift` — `@main`, `DocumentGroup<PanchamDocument>`. Menu customization via `.commands { }`.
+- `Document/`
+  - `PanchamDocument.swift` — `FileDocument` conforming to `.panchamNotation` UTType. Wraps a `Composition`.
+  - `Composition.swift` — `Composition`, `CompositionSection`, `Line`, `LineType`. All `Codable`. `CompositionSection` is named to avoid collision with `SwiftUI.Section`. `Line.init(from:)` accepts both the `{ type, cells }` shape and the legacy bare-array shape from old web-app exports (see `migrateLine` in the pre-refactor `app.js`).
+  - `Taal.swift` — `TaalID` enum with `matras`, `markers`, `vibhags`, `vibhagEndIndices`.
+- `DSL/SwaraParser.swift` — direct port of the `parseToken` / `parseCell` functions from the old `app.js`. Returns `[SwaraToken]`.
+- `Views/` — one file per visual concept. Hierarchy is `EditorView` → (toolbar) + page: `MetaHeaderView`, `SectionView` (× N) containing `NotationGridView` with `CellView` cells that delegate rendering to `SwaraView` / `RenderedCell` in render mode.
+- `Theme/Theme.swift` — colour and font tokens mapped 1:1 from the old Hindustan Editorial CSS. `Color(hex:)` helper, `paperBackground()` view modifier for the cream + double-rule page treatment.
+- `Resources/Fonts/` — four variable-font TTFs (Noto Serif Devanagari, EB Garamond upright + italic, IBM Plex Sans). Registered via `ATSApplicationFontsPath=Fonts` in `Info.plist`, referenced in `Theme.Fonts.*` by family name.
 
-State flow: user edits DOM → `save()` serializes inputs into `state`, writes `localStorage.sargam_<fileId>`, sets `isDirty` → auto-save timer calls `saveToDrive()` → `dbUpdateNotation` writes to Supabase. On boot, the last-opened file is rendered from localStorage cache first, then refreshed from Supabase in the background.
+## State flow
 
-## Auth model (there isn't one)
+There's no ObservableObject / Redux layer. The document is a value type; SwiftUI `@Binding` plumbing runs from `EditorView` → `SectionView` → `NotationGridView` → `CellView`. `PanchamDocument.composition.normalize()` runs on load to pad or truncate every line's `cells` array to the current taal's matra count; call it again if you ever change the taal programmatically mid-session.
 
-There is no Supabase Auth. On first load the user types a username into the overlay; it is stored in `localStorage.pancham_username` and appended to every insert / every query's `.eq('username', …)`. RLS is disabled on both tables. The "Switch user" button clears the cached username and reloads the overlay. This model trusts every client that can reach the publishable key — fine on localhost, **not** safe to expose publicly without adding a real auth layer back.
+## File format
 
-## Input DSL (for the notation cells)
+Same JSON shape as the original web app's Export JSON output. The `.pancham` UTType conforms to `public.json` so macOS treats these as editable text files. Legacy web-app JSON (with the old `[string,…]` line shape) opens via the fallback path in `Line.init(from:)`.
 
-Documented in the legend in `index.html`. Summary:
-- `S R G M P D N` shudh · lowercase `r g d n` komal · `M'` tivra · `.S` mandra · `^S` taar
-- `-` or `s` sustain (ऽ)
-- Space inside one cell = multiple swaras in one matra (rendered with `multi-2/3/4` size classes)
-- Tab moves to next cell; Enter commits and advances
+## DSL
 
-## Things to watch for
+`S R G M P D N` shudh · lowercase `r g d n` komal · `M'` tivra · `.S` mandra · `^S` taar · `-`/`s` sustain (ऽ). Space inside one cell = multi-swara matra, sized down per the CSS `multi-2/3/4` scales (0.78 / 0.68 / 0.56).
 
-- `.env` holds Supabase credentials (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_DB_PASSWORD`). It is gitignored. `build-config.sh` reads it and generates `config.js` (also gitignored), which `index.html` loads before `drive.js`. The anon/publishable key is safe to ship since RLS enforces per-user access; the DB password must never reach the browser, which is why we generate `config.js` rather than serving `.env` directly.
-- Legacy localStorage key `sargam` (no fileId) is migrated into Supabase on first sign-in (`onSignedIn` in `app.js`) — preserve that migration path if you touch boot.
-- `migrateLine()` upgrades the old line-is-an-array format to `{ type, cells }` — keep it whenever you touch persistence, old files in the wild still use the array shape.
-- Scripts communicate through globals (`currentFileId`, `state`, `fileTree`); there is no module system. Adding `import`/`export` would require either bundling or switching the script tags to `type="module"`.
+## Gotchas
+
+- `Section` is `SwiftUI.Section`. Our model type is **`CompositionSection`**. Don't rename it back.
+- `DocumentGroup(newDocument:)` takes a `Document` value, not a closure.
+- xcodegen, if given an `info:` block on a target, will stomp any custom `Info.plist`. The current `project.yml` omits `info:` and only sets `INFOPLIST_FILE` via target settings, so the checked-in `Pancham/Info.plist` is preserved.
+- Hardened runtime is disabled in Debug (ad-hoc codesigning note during build). That's expected locally and doesn't affect release builds.

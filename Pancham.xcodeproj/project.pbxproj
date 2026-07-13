@@ -1,0 +1,491 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00E03BEC48A950A3E2E9DA0A /* PerformanceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */; };
+		0C8D26F0E64FA0A1C6E89DFC /* PanchamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0361C25F57AA062E3D16EECD /* PanchamApp.swift */; };
+		113F435C45DBCB7BEFB8AEAE /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C1D3904E05B5497CCEEF32 /* NotesView.swift */; };
+		137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91AC2363B881B80866FB0998 /* UserPickerView.swift */; };
+		1603CF1F3E61D85D5B611892 /* SwaraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */; };
+		170FCE84B69AC517D5D623CB /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 5589A9D734A057EAAF4D63B5 /* Fonts */; };
+		1DC8BFB9B3722124E19FA3EA /* Composition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C55FF8295E7B84C55136E2 /* Composition.swift */; };
+		2276D97813C106F293ECB9F5 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18986CFD0E0C620BB1A95A86 /* CellView.swift */; };
+		22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BBCA391BB26CF3A46761DB /* Theka.swift */; };
+		37770072709F7ABA49DE4446 /* NotationGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520E55DD8E2A47FB1684C497 /* NotationGridView.swift */; };
+		48381BA82FCAC4C772D9CB9A /* vsco-strings.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */; };
+		49A1690ED7F8288A6FC9763D /* SectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D47E328242951C82246D193 /* SectionView.swift */; };
+		4BCA4D215C508C6317DFB8C5 /* tabla.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = DAFB46DA9CB1641F3498029F /* tabla.sf2 */; };
+		5CEBC7609E07DE393888D1B0 /* LibrarySidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */; };
+		7DC5E83A534CAAC5823D445A /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086601BA8121576F9CAB43A /* NowPlayingView.swift */; };
+		7E0E9B7CAAF45C9270BE822A /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */; };
+		824E8DA6D206BAB0BE9B6BF2 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADC0513DB717581EB37954B /* Library.swift */; };
+		8625E0679B53E1FEF5155929 /* vsco-organ.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = 38EB984CA50B616600C41939 /* vsco-organ.sf2 */; };
+		97B33B568A33A8ABE78F44AD /* MetaHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */; };
+		AA60B142A7D78EC47BFA6D00 /* Taal.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */; };
+		ADAB9E35D5247B5B4342D22D /* LegendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */; };
+		B6CC6314BE0CBB6BCF46B0F3 /* SwaraParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FDDBD5B8DE1D48141FCD5DD /* SwaraParser.swift */; };
+		BC09B2F4B50B35A81A6AEFCC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 643BF03D9A3D6D6855AF3333 /* Assets.xcassets */; };
+		C6B965966DF247B822E6B0AF /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA7203A312C5EA5150CBEFF /* RootView.swift */; };
+		CA441298DE1D36A385944FE3 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83587F3407B45EF8C728AE9C /* OnboardingView.swift */; };
+		D1B2B80495445E09BC6F4FE0 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006C821A3F16274366F3E9F1 /* Theme.swift */; };
+		E07A5788392DB67DF4C32514 /* PanchamLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E100E422285CF28DFC5160 /* PanchamLogo.swift */; };
+		E972F44D7454DCF83365B2AF /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3A4F5F934B314C7F2A25E9 /* EditorView.swift */; };
+		ECB20A3EE2A5628B7C760050 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB497E899D624CDFB8E1AAF /* Preferences.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		006C821A3F16274366F3E9F1 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		0361C25F57AA062E3D16EECD /* PanchamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanchamApp.swift; sourceTree = "<group>"; };
+		09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackEngine.swift; sourceTree = "<group>"; };
+		0EA7203A312C5EA5150CBEFF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		18986CFD0E0C620BB1A95A86 /* CellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellView.swift; sourceTree = "<group>"; };
+		19E100E422285CF28DFC5160 /* PanchamLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanchamLogo.swift; sourceTree = "<group>"; };
+		1D47E328242951C82246D193 /* SectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionView.swift; sourceTree = "<group>"; };
+		21C1D3904E05B5497CCEEF32 /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
+		242715F6824A883FDEDF2F3B /* Pancham.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pancham.entitlements; sourceTree = "<group>"; };
+		2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegendView.swift; sourceTree = "<group>"; };
+		3086601BA8121576F9CAB43A /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
+		31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebar.swift; sourceTree = "<group>"; };
+		38EB984CA50B616600C41939 /* vsco-organ.sf2 */ = {isa = PBXFileReference; path = "vsco-organ.sf2"; sourceTree = "<group>"; };
+		4FDDBD5B8DE1D48141FCD5DD /* SwaraParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwaraParser.swift; sourceTree = "<group>"; };
+		520E55DD8E2A47FB1684C497 /* NotationGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotationGridView.swift; sourceTree = "<group>"; };
+		5589A9D734A057EAAF4D63B5 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = Pancham/Resources/Fonts; sourceTree = SOURCE_ROOT; };
+		56BBCA391BB26CF3A46761DB /* Theka.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theka.swift; sourceTree = "<group>"; };
+		643BF03D9A3D6D6855AF3333 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwaraView.swift; sourceTree = "<group>"; };
+		6DB497E899D624CDFB8E1AAF /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		7ADC0513DB717581EB37954B /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
+		83587F3407B45EF8C728AE9C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		91AC2363B881B80866FB0998 /* UserPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPickerView.swift; sourceTree = "<group>"; };
+		9F3A4F5F934B314C7F2A25E9 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		A461BBD27B99C7A054D22B2F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A8C55FF8295E7B84C55136E2 /* Composition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Composition.swift; sourceTree = "<group>"; };
+		B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */ = {isa = PBXFileReference; path = "vsco-strings.sf2"; sourceTree = "<group>"; };
+		D0C4F279E65FC50CB1F3033E /* Pancham.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pancham.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaHeaderView.swift; sourceTree = "<group>"; };
+		DAFB46DA9CB1641F3498029F /* tabla.sf2 */ = {isa = PBXFileReference; path = tabla.sf2; sourceTree = "<group>"; };
+		EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taal.swift; sourceTree = "<group>"; };
+		EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceEditorView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		20A95123B62A29210504C995 /* Document */ = {
+			isa = PBXGroup;
+			children = (
+				A8C55FF8295E7B84C55136E2 /* Composition.swift */,
+				EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */,
+			);
+			path = Document;
+			sourceTree = "<group>";
+		};
+		53ABB9D6CB0D6EB114881E56 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D0C4F279E65FC50CB1F3033E /* Pancham.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5812455AC8ED65BC286037EF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				5589A9D734A057EAAF4D63B5 /* Fonts */,
+				591F290A024BD721BECB7585 /* Sounds */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		591F290A024BD721BECB7585 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				DAFB46DA9CB1641F3498029F /* tabla.sf2 */,
+				38EB984CA50B616600C41939 /* vsco-organ.sf2 */,
+				B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */,
+			);
+			path = Sounds;
+			sourceTree = "<group>";
+		};
+		650A1083C5CEFF061B76ADD0 /* DSL */ = {
+			isa = PBXGroup;
+			children = (
+				4FDDBD5B8DE1D48141FCD5DD /* SwaraParser.swift */,
+			);
+			path = DSL;
+			sourceTree = "<group>";
+		};
+		820F9DDFFD798178215192B3 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */,
+				56BBCA391BB26CF3A46761DB /* Theka.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		9069827BAA554741E0BB1836 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				18986CFD0E0C620BB1A95A86 /* CellView.swift */,
+				9F3A4F5F934B314C7F2A25E9 /* EditorView.swift */,
+				2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */,
+				31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */,
+				D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */,
+				520E55DD8E2A47FB1684C497 /* NotationGridView.swift */,
+				21C1D3904E05B5497CCEEF32 /* NotesView.swift */,
+				3086601BA8121576F9CAB43A /* NowPlayingView.swift */,
+				83587F3407B45EF8C728AE9C /* OnboardingView.swift */,
+				19E100E422285CF28DFC5160 /* PanchamLogo.swift */,
+				EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */,
+				0EA7203A312C5EA5150CBEFF /* RootView.swift */,
+				1D47E328242951C82246D193 /* SectionView.swift */,
+				64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */,
+				91AC2363B881B80866FB0998 /* UserPickerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		ABF8B74DDA92C6403E6FEEDA /* App */ = {
+			isa = PBXGroup;
+			children = (
+				7ADC0513DB717581EB37954B /* Library.swift */,
+				0361C25F57AA062E3D16EECD /* PanchamApp.swift */,
+				6DB497E899D624CDFB8E1AAF /* Preferences.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		B2EDFAC970A1B3146A8E3E92 = {
+			isa = PBXGroup;
+			children = (
+				E1C2ECED0E0C4EAD08C5E9C9 /* Pancham */,
+				53ABB9D6CB0D6EB114881E56 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D5732600CFEB6914261877B8 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				006C821A3F16274366F3E9F1 /* Theme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		E1C2ECED0E0C4EAD08C5E9C9 /* Pancham */ = {
+			isa = PBXGroup;
+			children = (
+				643BF03D9A3D6D6855AF3333 /* Assets.xcassets */,
+				A461BBD27B99C7A054D22B2F /* Info.plist */,
+				242715F6824A883FDEDF2F3B /* Pancham.entitlements */,
+				ABF8B74DDA92C6403E6FEEDA /* App */,
+				820F9DDFFD798178215192B3 /* Audio */,
+				20A95123B62A29210504C995 /* Document */,
+				650A1083C5CEFF061B76ADD0 /* DSL */,
+				5812455AC8ED65BC286037EF /* Resources */,
+				D5732600CFEB6914261877B8 /* Theme */,
+				9069827BAA554741E0BB1836 /* Views */,
+			);
+			path = Pancham;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		96B41B23FBCAB715D4E04CCD /* Pancham */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1E0109F51BE77635AF0E0528 /* Build configuration list for PBXNativeTarget "Pancham" */;
+			buildPhases = (
+				11CBA2A081B38343B6993897 /* Sources */,
+				971B91F3B2342FE8E8FD1A47 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Pancham;
+			packageProductDependencies = (
+			);
+			productName = Pancham;
+			productReference = D0C4F279E65FC50CB1F3033E /* Pancham.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A095FF1C66D4BE4439770E1C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					96B41B23FBCAB715D4E04CCD = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 54D6BA6E8E8D2D8DFE16DFCF /* Build configuration list for PBXProject "Pancham" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = B2EDFAC970A1B3146A8E3E92;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 53ABB9D6CB0D6EB114881E56 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				96B41B23FBCAB715D4E04CCD /* Pancham */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		971B91F3B2342FE8E8FD1A47 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BC09B2F4B50B35A81A6AEFCC /* Assets.xcassets in Resources */,
+				170FCE84B69AC517D5D623CB /* Fonts in Resources */,
+				4BCA4D215C508C6317DFB8C5 /* tabla.sf2 in Resources */,
+				8625E0679B53E1FEF5155929 /* vsco-organ.sf2 in Resources */,
+				48381BA82FCAC4C772D9CB9A /* vsco-strings.sf2 in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		11CBA2A081B38343B6993897 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2276D97813C106F293ECB9F5 /* CellView.swift in Sources */,
+				1DC8BFB9B3722124E19FA3EA /* Composition.swift in Sources */,
+				E972F44D7454DCF83365B2AF /* EditorView.swift in Sources */,
+				ADAB9E35D5247B5B4342D22D /* LegendView.swift in Sources */,
+				824E8DA6D206BAB0BE9B6BF2 /* Library.swift in Sources */,
+				5CEBC7609E07DE393888D1B0 /* LibrarySidebar.swift in Sources */,
+				97B33B568A33A8ABE78F44AD /* MetaHeaderView.swift in Sources */,
+				37770072709F7ABA49DE4446 /* NotationGridView.swift in Sources */,
+				113F435C45DBCB7BEFB8AEAE /* NotesView.swift in Sources */,
+				7DC5E83A534CAAC5823D445A /* NowPlayingView.swift in Sources */,
+				CA441298DE1D36A385944FE3 /* OnboardingView.swift in Sources */,
+				0C8D26F0E64FA0A1C6E89DFC /* PanchamApp.swift in Sources */,
+				E07A5788392DB67DF4C32514 /* PanchamLogo.swift in Sources */,
+				00E03BEC48A950A3E2E9DA0A /* PerformanceEditorView.swift in Sources */,
+				7E0E9B7CAAF45C9270BE822A /* PlaybackEngine.swift in Sources */,
+				ECB20A3EE2A5628B7C760050 /* Preferences.swift in Sources */,
+				C6B965966DF247B822E6B0AF /* RootView.swift in Sources */,
+				49A1690ED7F8288A6FC9763D /* SectionView.swift in Sources */,
+				B6CC6314BE0CBB6BCF46B0F3 /* SwaraParser.swift in Sources */,
+				1603CF1F3E61D85D5B611892 /* SwaraView.swift in Sources */,
+				AA60B142A7D78EC47BFA6D00 /* Taal.swift in Sources */,
+				22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */,
+				D1B2B80495445E09BC6F4FE0 /* Theme.swift in Sources */,
+				137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4FEE7750857BC37896412C22 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Pancham/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.harshagrawal.pancham;
+				PRODUCT_NAME = Pancham;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		87C7A7BD4A529EEEB67C63A4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Pancham/Pancham.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Pancham/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		9541C9E4ADAE37A9D6E988B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Pancham/Pancham.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Pancham/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D22E90D4A92848FEEE446F24 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Pancham/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.harshagrawal.pancham;
+				PRODUCT_NAME = Pancham;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1E0109F51BE77635AF0E0528 /* Build configuration list for PBXNativeTarget "Pancham" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87C7A7BD4A529EEEB67C63A4 /* Debug */,
+				9541C9E4ADAE37A9D6E988B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		54D6BA6E8E8D2D8DFE16DFCF /* Build configuration list for PBXProject "Pancham" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FEE7750857BC37896412C22 /* Debug */,
+				D22E90D4A92848FEEE446F24 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A095FF1C66D4BE4439770E1C /* Project object */;
+}
