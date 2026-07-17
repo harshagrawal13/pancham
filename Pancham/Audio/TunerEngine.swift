@@ -246,6 +246,10 @@ final class TunerEngine {
 
     func startDrone() {
         guard !isDroning else { restartDrone(); return }
+        // Cancel any in-flight fade-out from a recent stopDrone() — an orphaned
+        // fade would otherwise stop the players we're about to start.
+        droneTask?.cancel()
+        droneTask = nil
         buildGraphIfNeeded()
         guard droneBuffer != nil else { return }
         ensureEngineRunning()
@@ -302,9 +306,13 @@ final class TunerEngine {
     private func fadeOutAndStopAsync() async {
         let restore = droneMix.outputVolume
         for step in stride(from: 5, through: 0, by: -1) {
+            // Bail if superseded (drone restarted / retuned) — a cancelled fade
+            // must never stop the players a newer transition just started.
+            if Task.isCancelled { return }
             droneMix.outputVolume = restore * Float(step) / 6
             try? await Task.sleep(nanoseconds: 20_000_000)
         }
+        if Task.isCancelled { return }
         for p in players { p.stop(); p.volume = 1 }
         droneMix.outputVolume = Float(max(0, min(1, droneVolume)))
     }

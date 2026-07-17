@@ -47,4 +47,7 @@ targets:
       - Pancham/Assets.xcassets
     entitlements:
       path: Pancham/Pancham.entitlements
-      properties: {}
+      properties:
+        # Mic capture must be granted under hardened runtime (release builds);
+        # without it the tanpura tuner only hears anything in ad-hoc Debug.
+        com.apple.security.device.audio-input: true
