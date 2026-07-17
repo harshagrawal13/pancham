@@ -13,14 +13,17 @@
 		137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91AC2363B881B80866FB0998 /* UserPickerView.swift */; };
 		1603CF1F3E61D85D5B611892 /* SwaraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */; };
 		170FCE84B69AC517D5D623CB /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 5589A9D734A057EAAF4D63B5 /* Fonts */; };
+		18CBA1CF0DF5D18153B5221E /* tanpura.wav in Resources */ = {isa = PBXBuildFile; fileRef = 316BC8CDC09C2879AF14397C /* tanpura.wav */; };
 		1DC8BFB9B3722124E19FA3EA /* Composition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C55FF8295E7B84C55136E2 /* Composition.swift */; };
 		2276D97813C106F293ECB9F5 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18986CFD0E0C620BB1A95A86 /* CellView.swift */; };
 		22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BBCA391BB26CF3A46761DB /* Theka.swift */; };
+		32008B14F2B4FBA887D72215 /* TunerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491EBB6D5C534DF869AA2AC6 /* TunerEngine.swift */; };
 		37770072709F7ABA49DE4446 /* NotationGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520E55DD8E2A47FB1684C497 /* NotationGridView.swift */; };
 		48381BA82FCAC4C772D9CB9A /* vsco-strings.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */; };
 		49A1690ED7F8288A6FC9763D /* SectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D47E328242951C82246D193 /* SectionView.swift */; };
 		4BCA4D215C508C6317DFB8C5 /* tabla.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = DAFB46DA9CB1641F3498029F /* tabla.sf2 */; };
 		5CEBC7609E07DE393888D1B0 /* LibrarySidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */; };
+		5E974C7ADD58B0073933010B /* TanpuraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6E61F348F6469692CBA441 /* TanpuraView.swift */; };
 		7DC5E83A534CAAC5823D445A /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086601BA8121576F9CAB43A /* NowPlayingView.swift */; };
 		7E0E9B7CAAF45C9270BE822A /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */; };
 		824E8DA6D206BAB0BE9B6BF2 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADC0513DB717581EB37954B /* Library.swift */; };
@@ -45,13 +48,16 @@
 		0EA7203A312C5EA5150CBEFF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		18986CFD0E0C620BB1A95A86 /* CellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellView.swift; sourceTree = "<group>"; };
 		19E100E422285CF28DFC5160 /* PanchamLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanchamLogo.swift; sourceTree = "<group>"; };
+		1C6E61F348F6469692CBA441 /* TanpuraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TanpuraView.swift; sourceTree = "<group>"; };
 		1D47E328242951C82246D193 /* SectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionView.swift; sourceTree = "<group>"; };
 		21C1D3904E05B5497CCEEF32 /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		242715F6824A883FDEDF2F3B /* Pancham.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pancham.entitlements; sourceTree = "<group>"; };
 		2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegendView.swift; sourceTree = "<group>"; };
 		3086601BA8121576F9CAB43A /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
+		316BC8CDC09C2879AF14397C /* tanpura.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = tanpura.wav; sourceTree = "<group>"; };
 		31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebar.swift; sourceTree = "<group>"; };
 		38EB984CA50B616600C41939 /* vsco-organ.sf2 */ = {isa = PBXFileReference; path = "vsco-organ.sf2"; sourceTree = "<group>"; };
+		491EBB6D5C534DF869AA2AC6 /* TunerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunerEngine.swift; sourceTree = "<group>"; };
 		4FDDBD5B8DE1D48141FCD5DD /* SwaraParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwaraParser.swift; sourceTree = "<group>"; };
 		520E55DD8E2A47FB1684C497 /* NotationGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotationGridView.swift; sourceTree = "<group>"; };
 		5589A9D734A057EAAF4D63B5 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = Pancham/Resources/Fonts; sourceTree = SOURCE_ROOT; };
@@ -104,6 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				DAFB46DA9CB1641F3498029F /* tabla.sf2 */,
+				316BC8CDC09C2879AF14397C /* tanpura.wav */,
 				38EB984CA50B616600C41939 /* vsco-organ.sf2 */,
 				B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */,
 			);
@@ -123,6 +130,7 @@
 			children = (
 				09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */,
 				56BBCA391BB26CF3A46761DB /* Theka.swift */,
+				491EBB6D5C534DF869AA2AC6 /* TunerEngine.swift */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -144,6 +152,7 @@
 				0EA7203A312C5EA5150CBEFF /* RootView.swift */,
 				1D47E328242951C82246D193 /* SectionView.swift */,
 				64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */,
+				1C6E61F348F6469692CBA441 /* TanpuraView.swift */,
 				91AC2363B881B80866FB0998 /* UserPickerView.swift */,
 			);
 			path = Views;
@@ -255,6 +264,7 @@
 				BC09B2F4B50B35A81A6AEFCC /* Assets.xcassets in Resources */,
 				170FCE84B69AC517D5D623CB /* Fonts in Resources */,
 				4BCA4D215C508C6317DFB8C5 /* tabla.sf2 in Resources */,
+				18CBA1CF0DF5D18153B5221E /* tanpura.wav in Resources */,
 				8625E0679B53E1FEF5155929 /* vsco-organ.sf2 in Resources */,
 				48381BA82FCAC4C772D9CB9A /* vsco-strings.sf2 in Resources */,
 			);
@@ -288,8 +298,10 @@
 				B6CC6314BE0CBB6BCF46B0F3 /* SwaraParser.swift in Sources */,
 				1603CF1F3E61D85D5B611892 /* SwaraView.swift in Sources */,
 				AA60B142A7D78EC47BFA6D00 /* Taal.swift in Sources */,
+				5E974C7ADD58B0073933010B /* TanpuraView.swift in Sources */,
 				22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */,
 				D1B2B80495445E09BC6F4FE0 /* Theme.swift in Sources */,
+				32008B14F2B4FBA887D72215 /* TunerEngine.swift in Sources */,
 				137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

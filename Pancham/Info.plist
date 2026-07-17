@@ -24,6 +24,8 @@
 	<string>Copyright © 2026 Harsh Agrawal. All rights reserved.</string>
 	<key>ATSApplicationFontsPath</key>
 	<string>Fonts</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Pancham listens to your voice to show how close you are to each swara while you practise with the tanpura.</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
