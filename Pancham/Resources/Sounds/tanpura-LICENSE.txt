@@ -1,0 +1,32 @@
+tanpura.wav
+===========
+
+Instrument : Tanpura (single sustained plucked-string note, ~6.1s decay).
+             Tuned to C# in the source; use as an AVAudioUnitSampler patch
+             and pitch across the keyboard like any instrument.
+
+Source     : Freesound - "Tanpura note C sharp.wav"
+Sound page : https://freesound.org/people/luckylittleraven/sounds/416605/
+Author     : luckylittleraven (Freesound user)
+License    : CC0 1.0 Universal (Creative Commons Zero, Public Domain Dedication)
+             https://creativecommons.org/publicdomain/zero/1.0/
+             No attribution required. Free for commercial use, including
+             bundling in a closed-source shipped application.
+Downloaded : 2026-07-17
+
+Processing / provenance
+-----------------------
+The file bundled here was derived from Freesound's public 128 kbps HQ MP3
+preview of the CC0 original (the full-resolution WAV download on Freesound is
+gated behind a user login; the preview is served anonymously and, being CC0,
+is unrestricted). Steps applied:
+  1. Downloaded 416605_2112203-hq.mp3 (128 kbps, 44.1 kHz, stereo).
+  2. Decoded to 16-bit PCM WAV (afconvert -f WAVE -d LEI16@44100).
+  3. Peak-normalized to approx -1 dBFS (the source preview peaked near
+     -20 dBFS, too quiet to use directly); no other edits.
+Result: 44.1 kHz, 16-bit, stereo, ~6.13 s.
+
+Note: because the bundled file comes from the lossy preview, it is not
+bit-perfect to the CC0 master. If a lossless copy is wanted, log in to the
+Freesound page above and download the original WAV (CC0, same terms) to
+replace this file.

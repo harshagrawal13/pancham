@@ -57,6 +57,8 @@ struct LibraryEditor: View {
     @State private var folderName: String = ""
     @State private var saveTask: Task<Void, Never>? = nil
     @State private var showNowPlaying: Bool = false
+    @State private var tuner = TunerEngine()
+    @State private var showTanpura: Bool = false
 
     init(prefs: Preferences, root: URL, user: PanchamUser) {
         _prefs = Bindable(prefs)
@@ -91,7 +93,8 @@ struct LibraryEditor: View {
                 library: library,
                 playback: playback,
                 onNewFile: { creatingFile = true },
-                onPerform: { showNowPlaying = true }
+                onPerform: { showNowPlaying = true },
+                onTanpura: { showTanpura = true }
             )
         }
         .background(Theme.canvas)
@@ -106,7 +109,15 @@ struct LibraryEditor: View {
                 .zIndex(10)
             }
         }
+        .overlay {
+            if showTanpura {
+                TanpuraView(tuner: tuner, onClose: { showTanpura = false })
+                    .transition(.move(edge: .bottom))
+                    .zIndex(11)
+            }
+        }
         .animation(.spring(response: 0.45, dampingFraction: 0.86), value: showNowPlaying)
+        .animation(.spring(response: 0.45, dampingFraction: 0.86), value: showTanpura)
         .onChange(of: selectedURL) { _, newURL in
             playback.stop()
             showNowPlaying = false
@@ -266,6 +277,7 @@ struct EditorPane: View {
     @Bindable var playback: PlaybackEngine
     let onNewFile: () -> Void
     let onPerform: () -> Void
+    let onTanpura: () -> Void
 
     @State private var showPerformance = false
 
@@ -363,6 +375,15 @@ struct EditorPane: View {
                     .buttonStyle(ToolbarOutlineButton())
                     .keyboardShortcut("r", modifiers: [.command])
             }
+            // Riyaz tool — available whether or not a notation is open.
+            Button(action: onTanpura) {
+                HStack(spacing: 5) {
+                    Image(systemName: "waveform")
+                    Text("Tanpura")
+                }
+            }
+            .buttonStyle(ToolbarOutlineButton())
+            .keyboardShortcut("t", modifiers: [.command, .shift])
             Button("+ Notation") { onNewFile() }
                 .buttonStyle(ToolbarPrimaryButton())
                 .keyboardShortcut("n", modifiers: [.command])
@@ -397,9 +418,18 @@ struct EditorPane: View {
             Text("Choose a notation from the library, or create a new one.")
                 .font(Theme.display(15))
                 .foregroundStyle(Theme.muted)
-            Button("+ New notation", action: onNewFile)
-                .buttonStyle(ToolbarPrimaryButton())
-                .padding(.top, 6)
+            HStack(spacing: 10) {
+                Button("+ New notation", action: onNewFile)
+                    .buttonStyle(ToolbarPrimaryButton())
+                Button(action: onTanpura) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "waveform")
+                        Text("Tanpura")
+                    }
+                }
+                .buttonStyle(ToolbarOutlineButton())
+            }
+            .padding(.top, 6)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

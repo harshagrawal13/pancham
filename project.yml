@@ -40,6 +40,9 @@ targets:
         buildPhase: resources
       - path: Pancham/Resources/Sounds/tabla.sf2
         buildPhase: resources
+      # Bundled tanpura pluck (CC0 — see tanpura-LICENSE.txt) for the riyaz drone.
+      - path: Pancham/Resources/Sounds/tanpura.wav
+        buildPhase: resources
     resources:
       - Pancham/Assets.xcassets
     entitlements:
