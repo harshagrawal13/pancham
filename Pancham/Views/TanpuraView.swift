@@ -147,13 +147,15 @@ struct TanpuraView: View {
                         .frame(maxWidth: .infinity)
                         .position(x: geo.size.width / 2, y: yy)
 
-                    Button {
-                        tuner.setTarget(isTarget ? nil : sw.semitone)
-                    } label: {
-                        rungLabel(sw, active: isNearest, inTune: inTune, target: isTarget)
-                    }
-                    .buttonStyle(.plain)
-                    .position(x: labelX / 2 + 12, y: yy)
+                    // A plain tap gesture, not a Button: these labels are
+                    // rebuilt ~20×/s while singing, and clicking a SwiftUI
+                    // Button mid-invalidation crashed in gesture dispatch.
+                    rungLabel(sw, active: isNearest, inTune: inTune, target: isTarget)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            tuner.setTarget(isTarget ? nil : sw.semitone)
+                        }
+                        .position(x: labelX / 2 + 12, y: yy)
                 }
 
                 // Live pitch line.
@@ -325,9 +327,11 @@ struct TanpuraView: View {
                     .font(Theme.mono(13))
                     .foregroundStyle(tuner.onTarget ? green : Color.white.opacity(0.4))
                 holdBar
-                Button("Clear target") { tuner.setTarget(nil) }
-                    .buttonStyle(.plain)
+                // Tap gesture, not Button — this panel rebuilds at pitch rate.
+                Text("Clear target")
                     .font(Theme.ui(11)).foregroundStyle(gold.opacity(0.9))
+                    .contentShape(Rectangle())
+                    .onTapGesture { tuner.setTarget(nil) }
             } else {
                 Text("Tap a swara on the ladder to hold it.")
                     .font(Theme.display(13, italic: true))

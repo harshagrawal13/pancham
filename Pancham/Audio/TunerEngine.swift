@@ -69,11 +69,13 @@ final class TunerEngine {
     // MARK: Audio graph
 
     private let engine = AVAudioEngine()
-    /// One pluck sample, four strings. Each string is its own player→varispeed
-    /// chain so up to four plucks ring at once (the tanpura's shimmer), and each
-    /// chain is pitched independently to its string's exact frequency.
-    private let players = (0..<4).map { _ in AVAudioPlayerNode() }
-    private let varispeeds = (0..<4).map { _ in AVAudioUnitVarispeed() }
+    /// One pluck sample, four strings. Each string owns TWO player→varispeed
+    /// chains (players i and i+4) used alternately, so every pluck rings its
+    /// full natural decay — by the time a player is reused, two cycles later,
+    /// its buffer has already ended. No pluck is ever cut off mid-ring, which
+    /// is what makes it drone instead of sounding like separate notes.
+    private let players = (0..<8).map { _ in AVAudioPlayerNode() }
+    private let varispeeds = (0..<8).map { _ in AVAudioUnitVarispeed() }
     private let droneMix = AVAudioMixerNode()
     private var droneBuffer: AVAudioPCMBuffer?
     private var graphBuilt = false
@@ -143,7 +145,10 @@ final class TunerEngine {
     }
 
     /// Read the bundled `tanpura.wav` (one plucked C#3) into a buffer we can
-    /// re-trigger cheaply on every string.
+    /// re-trigger cheaply on every string. The edges are shaped once here: a
+    /// 5 ms fade-in kills any start click, and a cosine fade over the last
+    /// 0.8 s guarantees the decay reaches true silence (the tail of the
+    /// preview-derived sample doesn't quite).
     private func loadBuffer() {
         guard droneBuffer == nil,
               let url = Bundle.main.url(forResource: "tanpura", withExtension: "wav"),
@@ -152,6 +157,22 @@ final class TunerEngine {
         guard let buf = AVAudioPCMBuffer(pcmFormat: fmt,
                                          frameCapacity: AVAudioFrameCount(file.length)) else { return }
         try? file.read(into: buf)
+        if let data = buf.floatChannelData {
+            let n = Int(buf.frameLength)
+            let sr = fmt.sampleRate
+            let fadeIn = min(Int(sr * 0.005), n)
+            let fadeOut = min(Int(sr * 0.8), n)
+            for ch in 0..<Int(fmt.channelCount) {
+                for i in 0..<fadeIn {
+                    data[ch][i] *= Float(i) / Float(fadeIn)
+                }
+                for i in 0..<fadeOut {
+                    let frac = Double(i) / Double(fadeOut)          // 0 → 1 across the tail
+                    let gain = Float(0.5 * (1 + cos(.pi * frac)))   // 1 → 0, cosine
+                    data[ch][n - fadeOut + i] *= gain
+                }
+            }
+        }
         droneBuffer = buf
     }
 
@@ -173,16 +194,23 @@ final class TunerEngine {
     }
 
     /// Set each string's varispeed so it sounds its exact target frequency.
+    /// Both of a string's chains (i and i+4) carry the same rate.
     private func applyRates() {
         let offsets = droneOffsets
-        for i in players.indices {
-            let hz = midiToHz(saMidi + offsets[i])
+        for i in varispeeds.indices {
+            let hz = midiToHz(saMidi + offsets[i % offsets.count])
             varispeeds[i].rate = Float(min(max(hz / Self.nativeHz, 0.25), 4))
         }
     }
 
+    /// Seconds after each string's pluck before the next string sounds. The
+    /// classic unhurried gait: three even plucks, then a longer breath after
+    /// the final Sa before the cycle comes round again.
+    private static let pluckGaps: [Duration] = [
+        .milliseconds(900), .milliseconds(900), .milliseconds(900), .milliseconds(1600),
+    ]
+
     func startDrone() {
-        guard droneBuffer != nil || Bundle.main.url(forResource: "tanpura", withExtension: "wav") != nil else { return }
         guard !isDroning else { restartDrone(); return }
         buildGraphIfNeeded()
         guard droneBuffer != nil else { return }
@@ -195,8 +223,8 @@ final class TunerEngine {
     func stopDrone() {
         droneTask?.cancel()
         droneTask = nil
-        for p in players { p.stop() }
         isDroning = false
+        fadeOutAndStop()
     }
 
     func toggleDrone() { isDroning ? stopDrone() : startDrone() }
@@ -205,29 +233,62 @@ final class TunerEngine {
     private func restartDrone() {
         guard isDroning else { return }
         droneTask?.cancel()
-        for p in players { p.stop() }
-        applyRates()
-        runDroneLoop()
+        droneTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.fadeOutAndStopAsync()
+            guard !Task.isCancelled, self.isDroning else { return }
+            self.applyRates()
+            self.runDroneLoop()
+        }
     }
 
-    /// Pluck the strings in turn, letting each ring, looping forever. Each string
-    /// keeps its own player (and rate), re-triggered one full cycle later, so the
-    /// drone keeps a steady four-string shimmer.
+    /// Ramp the drone bus down over ~120 ms, silence every player, restore the
+    /// bus — so stopping or retuning never clicks.
+    private func fadeOutAndStop() {
+        Task { @MainActor [weak self] in await self?.fadeOutAndStopAsync() }
+    }
+
+    private func fadeOutAndStopAsync() async {
+        let restore = droneMix.outputVolume
+        for step in stride(from: 5, through: 0, by: -1) {
+            droneMix.outputVolume = restore * Float(step) / 6
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+        for p in players { p.stop(); p.volume = 1 }
+        droneMix.outputVolume = Float(max(0, min(1, droneVolume)))
+    }
+
+    /// Pluck the strings in the traditional cycle, each ringing its full decay.
+    /// A string's two chains alternate cycle by cycle, so a new pluck never
+    /// silences the previous one — by the time a chain is reused (two cycles,
+    /// ~8.6 s), its buffer has all but died away; any remainder is eased out
+    /// with a tiny volume ramp just before the re-pluck, never a hard cut.
     private func runDroneLoop() {
         guard let buffer = droneBuffer else { return }
-        let interval: Duration = .milliseconds(560)
         let clock = ContinuousClock()
         droneTask = Task { @MainActor [weak self] in
             var next = clock.now
-            var idx = 0
+            var string = 0
+            var bank = 0
             while !Task.isCancelled {
                 guard let self else { return }
-                let p = self.players[idx % self.players.count]
-                p.stop()
+                let p = self.players[string + bank * 4]
+                if p.isPlaying {
+                    // Ease out a still-ringing tail (deep mandra strings can
+                    // outlast two cycles when Sa is set very low).
+                    for step in stride(from: 4, through: 0, by: -1) {
+                        p.volume = Float(step) / 5
+                        try? await Task.sleep(nanoseconds: 15_000_000)
+                        if Task.isCancelled { return }
+                    }
+                    p.stop()
+                }
+                p.volume = 1
                 p.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
                 p.play()
-                idx += 1
-                next = next.advanced(by: interval)
+                next = next.advanced(by: Self.pluckGaps[string])
+                string += 1
+                if string == 4 { string = 0; bank = 1 - bank }
                 try? await clock.sleep(until: next, tolerance: nil)
             }
         }
@@ -271,25 +332,53 @@ final class TunerEngine {
         onTarget = false
         holdSeconds = 0
         lastFrameTime = nil
+        emaMidi = nil
+        lastPublish = 0
     }
 
+    /// Exponentially smoothed pitch (MIDI float), fed by every mic frame.
+    private var emaMidi: Double?
+    /// Wall-clock of the last published frame, for the ~20 Hz UI throttle.
+    private var lastPublish: CFTimeInterval = 0
+
     /// Fold one analysis frame into the published state and integrate the hold
-    /// timer against the target.
+    /// timer against the target. Mic frames arrive ~43×/s; the observable
+    /// properties are only touched at ~20 Hz (with light smoothing) so SwiftUI
+    /// isn't rebuilt on every audio buffer — full-rate invalidation both looked
+    /// jittery and could tear down a button mid-click (the crash on 17 Jul).
     private func apply(_ hz: Double?) {
         let now = CACurrentMediaTime()
+
+        if let hz, hz > 0 {
+            let midi = 69 + 12 * log2(hz / 440)
+            // Reset the EMA on a big jump (new note) so it tracks, not glides.
+            if let prev = emaMidi, abs(midi - prev) < 0.8 {
+                emaMidi = prev + 0.45 * (midi - prev)
+            } else {
+                emaMidi = midi
+            }
+        } else {
+            emaMidi = nil
+        }
+
+        // Publish on voiced/unvoiced transitions immediately; otherwise 20 Hz.
+        let silentNow = emaMidi == nil
+        let silentShown = midiFloat == nil
+        guard silentNow != silentShown || now - lastPublish >= 0.045 else { return }
+        lastPublish = now
         defer { lastFrameTime = now }
 
-        guard let hz, hz > 0 else {
+        guard let midi = emaMidi else {
             pitchHz = nil; midiFloat = nil; nearestSemitone = nil; cents = 0
             onTarget = false; holdSeconds = 0
             return
         }
-        let midi = 69 + 12 * log2(hz / 440)
+        let hzShown = 440 * pow(2, (midi - 69) / 12)
         let fromSa = midi - Double(saMidi)
         let nearest = Int(fromSa.rounded())
         let centsOff = (fromSa - Double(nearest)) * 100
 
-        pitchHz = hz
+        pitchHz = hzShown
         midiFloat = midi
         nearestSemitone = nearest
         cents = centsOff
