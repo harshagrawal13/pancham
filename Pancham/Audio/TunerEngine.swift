@@ -69,13 +69,11 @@ final class TunerEngine {
     // MARK: Audio graph
 
     private let engine = AVAudioEngine()
-    /// One pluck sample, four strings. Each string owns TWO player→varispeed
-    /// chains (players i and i+4) used alternately, so every pluck rings its
-    /// full natural decay — by the time a player is reused, two cycles later,
-    /// its buffer has already ended. No pluck is ever cut off mid-ring, which
-    /// is what makes it drone instead of sounding like separate notes.
-    private let players = (0..<8).map { _ in AVAudioPlayerNode() }
-    private let varispeeds = (0..<8).map { _ in AVAudioUnitVarispeed() }
+    /// Three continuous strings — Pa/Ma an octave down, Sa, and mandra Sa —
+    /// each a player→varispeed chain looping a seamless sustain extracted from
+    /// the pluck sample. No pluck cycle: the drone is one unbroken tone.
+    private let players = (0..<3).map { _ in AVAudioPlayerNode() }
+    private let varispeeds = (0..<3).map { _ in AVAudioUnitVarispeed() }
     private let droneMix = AVAudioMixerNode()
     private var droneBuffer: AVAudioPCMBuffer?
     private var graphBuilt = false
@@ -144,36 +142,77 @@ final class TunerEngine {
         droneMix.outputVolume = Float(droneVolume)
     }
 
-    /// Read the bundled `tanpura.wav` (one plucked C#3) into a buffer we can
-    /// re-trigger cheaply on every string. The edges are shaped once here: a
-    /// 5 ms fade-in kills any start click, and a cosine fade over the last
-    /// 0.8 s guarantees the decay reaches true silence (the tail of the
-    /// preview-derived sample doesn't quite).
+    /// Build a seamless sustain loop from the bundled `tanpura.wav` (one plucked
+    /// C#3). Three steps, once at load:
+    ///   1. Take the sustained middle of the pluck (past the attack, before the
+    ///      faded tail) — so no "dung" transient ever sounds.
+    ///   2. Flatten the decay: measure the RMS envelope in ~46 ms windows and
+    ///      gain-correct each window toward the segment's median level, so the
+    ///      loop holds a steady loudness instead of pulsing as it repeats.
+    ///   3. Equal-power crossfade the segment's tail into its head, making the
+    ///      loop point inaudible under `.loops` playback.
     private func loadBuffer() {
         guard droneBuffer == nil,
               let url = Bundle.main.url(forResource: "tanpura", withExtension: "wav"),
               let file = try? AVAudioFile(forReading: url) else { return }
         let fmt = file.processingFormat
-        guard let buf = AVAudioPCMBuffer(pcmFormat: fmt,
+        guard let raw = AVAudioPCMBuffer(pcmFormat: fmt,
                                          frameCapacity: AVAudioFrameCount(file.length)) else { return }
-        try? file.read(into: buf)
-        if let data = buf.floatChannelData {
-            let n = Int(buf.frameLength)
-            let sr = fmt.sampleRate
-            let fadeIn = min(Int(sr * 0.005), n)
-            let fadeOut = min(Int(sr * 0.8), n)
-            for ch in 0..<Int(fmt.channelCount) {
-                for i in 0..<fadeIn {
-                    data[ch][i] *= Float(i) / Float(fadeIn)
-                }
-                for i in 0..<fadeOut {
-                    let frac = Double(i) / Double(fadeOut)          // 0 → 1 across the tail
-                    let gain = Float(0.5 * (1 + cos(.pi * frac)))   // 1 → 0, cosine
-                    data[ch][n - fadeOut + i] *= gain
-                }
+        try? file.read(into: raw)
+        guard let src = raw.floatChannelData else { return }
+        let sr = fmt.sampleRate
+        let channels = Int(fmt.channelCount)
+        let total = Int(raw.frameLength)
+
+        // 1. Sustained middle: 0.8 s … 5.2 s (of the 6.13 s sample).
+        let segStart = min(Int(sr * 0.8), total)
+        let segEnd = min(Int(sr * 5.2), total)
+        let segLen = segEnd - segStart
+        guard segLen > Int(sr) else { return }
+
+        // 2. Envelope flattening, per channel.
+        let win = 2048
+        var flat = [[Float]](repeating: [Float](repeating: 0, count: segLen), count: channels)
+        for ch in 0..<channels {
+            let windows = (segLen + win - 1) / win
+            var rms = [Double](repeating: 0, count: windows)
+            for w in 0..<windows {
+                let a = segStart + w * win
+                let b = min(a + win, segEnd)
+                var s: Double = 0
+                for i in a..<b { s += Double(src[ch][i] * src[ch][i]) }
+                rms[w] = (s / Double(b - a)).squareRoot()
+            }
+            let target = rms.sorted(by: <)[windows / 2]   // median level
+            // Per-window gain toward the median, clamped so the quiet end of
+            // the segment doesn't have its noise floor blown up.
+            let gains = rms.map { $0 > 0 ? min(max(target / $0, 0.5), 3.5) : 1 }
+            for i in 0..<segLen {
+                let w = i / win
+                let frac = Float(i % win) / Float(win)
+                let g0 = Float(gains[w])
+                let g1 = Float(w + 1 < windows ? gains[w + 1] : gains[w])
+                flat[ch][i] = src[ch][segStart + i] * (g0 + (g1 - g0) * frac)
             }
         }
-        droneBuffer = buf
+
+        // 3. Crossfade the tail into the head; the loop is the first (segLen−C).
+        let cross = min(Int(sr * 0.35), segLen / 4)
+        let loopLen = segLen - cross
+        guard let loop = AVAudioPCMBuffer(pcmFormat: fmt,
+                                          frameCapacity: AVAudioFrameCount(loopLen)) else { return }
+        loop.frameLength = AVAudioFrameCount(loopLen)
+        guard let dst = loop.floatChannelData else { return }
+        for ch in 0..<channels {
+            for i in 0..<loopLen { dst[ch][i] = flat[ch][i] }
+            for i in 0..<cross {
+                let t = Double(i) / Double(cross)
+                let wIn = Float(sin(t * .pi / 2))     // head ramps in
+                let wOut = Float(cos(t * .pi / 2))    // tail ramps out
+                dst[ch][i] = flat[ch][i] * wIn + flat[ch][loopLen + i] * wOut
+            }
+        }
+        droneBuffer = loop
     }
 
     private func midiToHz(_ midi: Int) -> Double { 440 * pow(2, (Double(midi) - 69) / 12) }
@@ -186,29 +225,24 @@ final class TunerEngine {
 
     // MARK: - Drone
 
-    /// The four tanpura strings as semitone offsets from Sa, in pluck order:
-    /// first string (Pa or Ma, an octave down), Sa, Sa, mandra Sa.
+    /// The three continuous strings as semitone offsets from Sa: first string
+    /// (Pa or Ma, an octave down), Sa, and mandra Sa.
     private var droneOffsets: [Int] {
         let first = useMa ? -7 : -5      // mandra Ma (5−12) or mandra Pa (7−12)
-        return [first, 0, 0, -12]
+        return [first, 0, -12]
     }
 
+    /// Per-string levels: Sa carries the drone; the flanking strings sit under it.
+    private static let stringLevels: [Float] = [0.55, 1.0, 0.7]
+
     /// Set each string's varispeed so it sounds its exact target frequency.
-    /// Both of a string's chains (i and i+4) carry the same rate.
     private func applyRates() {
         let offsets = droneOffsets
         for i in varispeeds.indices {
-            let hz = midiToHz(saMidi + offsets[i % offsets.count])
+            let hz = midiToHz(saMidi + offsets[i])
             varispeeds[i].rate = Float(min(max(hz / Self.nativeHz, 0.25), 4))
         }
     }
-
-    /// Seconds after each string's pluck before the next string sounds. The
-    /// classic unhurried gait: three even plucks, then a longer breath after
-    /// the final Sa before the cycle comes round again.
-    private static let pluckGaps: [Duration] = [
-        .milliseconds(900), .milliseconds(900), .milliseconds(900), .milliseconds(1600),
-    ]
 
     func startDrone() {
         guard !isDroning else { restartDrone(); return }
@@ -217,19 +251,19 @@ final class TunerEngine {
         ensureEngineRunning()
         isDroning = true
         applyRates()
-        runDroneLoop()
+        beginContinuousDrone()
     }
 
     func stopDrone() {
         droneTask?.cancel()
         droneTask = nil
         isDroning = false
-        fadeOutAndStop()
+        droneTask = Task { @MainActor [weak self] in await self?.fadeOutAndStopAsync() }
     }
 
     func toggleDrone() { isDroning ? stopDrone() : startDrone() }
 
-    /// Retune in place (Sa or Pa/Ma changed) and restart the pluck cycle cleanly.
+    /// Retune in place (Sa or Pa/Ma changed): fade down, re-pitch, fade back up.
     private func restartDrone() {
         guard isDroning else { return }
         droneTask?.cancel()
@@ -238,16 +272,33 @@ final class TunerEngine {
             await self.fadeOutAndStopAsync()
             guard !Task.isCancelled, self.isDroning else { return }
             self.applyRates()
-            self.runDroneLoop()
+            self.beginContinuousDrone()
+        }
+    }
+
+    /// Start all three looping strings and ease the bus in over ~0.8 s, so the
+    /// drone swells up rather than switching on.
+    private func beginContinuousDrone() {
+        guard let buffer = droneBuffer else { return }
+        for (i, p) in players.enumerated() {
+            p.stop()
+            p.volume = Self.stringLevels[i]
+            p.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
+            p.play()
+        }
+        let full = Float(max(0, min(1, droneVolume)))
+        droneMix.outputVolume = 0
+        droneTask = Task { @MainActor [weak self] in
+            for step in 1...16 {
+                guard let self, !Task.isCancelled else { return }
+                self.droneMix.outputVolume = full * Float(step) / 16
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
         }
     }
 
     /// Ramp the drone bus down over ~120 ms, silence every player, restore the
     /// bus — so stopping or retuning never clicks.
-    private func fadeOutAndStop() {
-        Task { @MainActor [weak self] in await self?.fadeOutAndStopAsync() }
-    }
-
     private func fadeOutAndStopAsync() async {
         let restore = droneMix.outputVolume
         for step in stride(from: 5, through: 0, by: -1) {
@@ -256,42 +307,6 @@ final class TunerEngine {
         }
         for p in players { p.stop(); p.volume = 1 }
         droneMix.outputVolume = Float(max(0, min(1, droneVolume)))
-    }
-
-    /// Pluck the strings in the traditional cycle, each ringing its full decay.
-    /// A string's two chains alternate cycle by cycle, so a new pluck never
-    /// silences the previous one — by the time a chain is reused (two cycles,
-    /// ~8.6 s), its buffer has all but died away; any remainder is eased out
-    /// with a tiny volume ramp just before the re-pluck, never a hard cut.
-    private func runDroneLoop() {
-        guard let buffer = droneBuffer else { return }
-        let clock = ContinuousClock()
-        droneTask = Task { @MainActor [weak self] in
-            var next = clock.now
-            var string = 0
-            var bank = 0
-            while !Task.isCancelled {
-                guard let self else { return }
-                let p = self.players[string + bank * 4]
-                if p.isPlaying {
-                    // Ease out a still-ringing tail (deep mandra strings can
-                    // outlast two cycles when Sa is set very low).
-                    for step in stride(from: 4, through: 0, by: -1) {
-                        p.volume = Float(step) / 5
-                        try? await Task.sleep(nanoseconds: 15_000_000)
-                        if Task.isCancelled { return }
-                    }
-                    p.stop()
-                }
-                p.volume = 1
-                p.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
-                p.play()
-                next = next.advanced(by: Self.pluckGaps[string])
-                string += 1
-                if string == 4 { string = 0; bank = 1 - bank }
-                try? await clock.sleep(until: next, tolerance: nil)
-            }
-        }
     }
 
     // MARK: - Listening (mic tap + YIN)
@@ -371,6 +386,7 @@ final class TunerEngine {
         guard let midi = emaMidi else {
             pitchHz = nil; midiFloat = nil; nearestSemitone = nil; cents = 0
             onTarget = false; holdSeconds = 0
+            recordFrame(now, semi: nil, cents: 0)
             return
         }
         let hzShown = 440 * pow(2, (midi - 69) / 12)
@@ -382,6 +398,7 @@ final class TunerEngine {
         midiFloat = midi
         nearestSemitone = nearest
         cents = centsOff
+        recordFrame(now, semi: nearest, cents: centsOff)
 
         if let target = targetSemitone {
             // Distance to the target swara in cents (handles octave too).
@@ -405,6 +422,34 @@ final class TunerEngine {
         targetSemitone = semitone
         holdSeconds = 0
         onTarget = false
+    }
+
+    // MARK: - Session
+
+    /// True while a riyaz session is being recorded.
+    var sessionActive = false
+    /// Recorded pitch frames: publish time, nearest swara (nil = silence), cents.
+    private var sessionFrames: [(t: Double, semi: Int?, cents: Double)] = []
+    private var sessionStartTime: CFTimeInterval = 0
+
+    func startSession() {
+        sessionFrames = []
+        sessionStartTime = CACurrentMediaTime()
+        sessionActive = true
+    }
+
+    /// Stop recording and roll the frames up into per-swara stats + a score.
+    func endSession() -> RiyazSummary {
+        sessionActive = false
+        let duration = CACurrentMediaTime() - sessionStartTime
+        return RiyazSummary.build(frames: sessionFrames, duration: duration,
+                                  inTuneCents: Self.inTuneCents)
+    }
+
+    /// Record the published frame while a session runs (called from `apply`).
+    private func recordFrame(_ now: CFTimeInterval, semi: Int?, cents: Double) {
+        guard sessionActive else { return }
+        sessionFrames.append((t: now, semi: semi, cents: cents))
     }
 
     // MARK: - YIN pitch detection
@@ -527,4 +572,76 @@ struct Swara: Identifiable, Hashable {
     }
 
     static let names12 = (0..<12).map { Swara(semitone: $0).roman }
+}
+
+// MARK: - Session summary
+
+/// How one swara went over a session.
+struct SwaraStat: Identifiable {
+    let semitone: Int
+    /// Total time this swara was being sung.
+    var sungSeconds: Double = 0
+    /// Of that, time spent inside the in-tune window.
+    var inTuneSeconds: Double = 0
+    /// Longest unbroken in-tune stretch.
+    var bestHoldSeconds: Double = 0
+
+    var id: Int { semitone }
+    var swara: Swara { Swara(semitone: semitone) }
+    var accuracy: Double { sungSeconds > 0 ? inTuneSeconds / sungSeconds : 0 }
+    /// A swara you spent real time on but rarely landed — "missed".
+    var isShaky: Bool { sungSeconds >= 1.0 && accuracy < 0.5 }
+}
+
+/// End-of-session report: per-swara breakdown plus one time-agnostic score.
+struct RiyazSummary {
+    let duration: Double
+    /// Total time a pitch was actually being sung.
+    let voicedSeconds: Double
+    /// Of that, time within the in-tune window of the nearest swara.
+    let inTuneSeconds: Double
+    /// Per-swara rows, most-practised first.
+    let stats: [SwaraStat]
+
+    /// 0…100. The fraction of your *sung* time that was in tune — a ratio, so
+    /// a short session and a long one are judged by the same yardstick.
+    var score: Int { voicedSeconds > 0 ? Int((inTuneSeconds / voicedSeconds * 100).rounded()) : 0 }
+    var shaky: [SwaraStat] { stats.filter(\.isShaky) }
+
+    /// Integrate the ~20 Hz frame stream into per-swara time totals. A frame
+    /// covers the gap to the next frame, capped at 0.2 s so pauses (when no
+    /// frames are published) don't count as singing.
+    static func build(frames: [(t: Double, semi: Int?, cents: Double)],
+                      duration: Double, inTuneCents: Double) -> RiyazSummary {
+        var bySemi: [Int: SwaraStat] = [:]
+        var voiced = 0.0, inTune = 0.0
+        var streakSemi: Int? = nil
+        var streak = 0.0
+
+        for i in frames.indices {
+            let f = frames[i]
+            guard let semi = f.semi else { streakSemi = nil; streak = 0; continue }
+            let dt: Double = i + 1 < frames.count
+                ? min(frames[i + 1].t - f.t, 0.2)
+                : 0.05
+            let hit = abs(f.cents) <= inTuneCents
+            var stat = bySemi[semi] ?? SwaraStat(semitone: semi)
+            stat.sungSeconds += dt
+            voiced += dt
+            if hit {
+                stat.inTuneSeconds += dt
+                inTune += dt
+                if streakSemi == semi { streak += dt } else { streakSemi = semi; streak = dt }
+                stat.bestHoldSeconds = max(stat.bestHoldSeconds, streak)
+            } else {
+                streakSemi = nil
+                streak = 0
+            }
+            bySemi[semi] = stat
+        }
+
+        let rows = bySemi.values.sorted { $0.sungSeconds > $1.sungSeconds }
+        return RiyazSummary(duration: duration, voicedSeconds: voiced,
+                            inTuneSeconds: inTune, stats: rows)
+    }
 }
