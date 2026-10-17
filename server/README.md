@@ -88,10 +88,15 @@ The pieces are ready in `server/kamaji/` (once they are in kamaji-server, which 
 2. **kamaji-server**: add `server/kamaji/apps.toml.snippet` (with the AUD) to `apps.toml` and
    `server/kamaji/com.harsh.pancham.plist` to `launchagents/`; `bin/kamaji render`; commit, push.
 3. **kamaji**: the Pancham checkout must be clean (`git status`), then `bin/kamaji add-app pancham --yes`.
-4. **`server/.env` on kamaji** (0600): `PANCHAM_ADMIN_EMAILS=you@example.com`, and `RESEND_API_KEY` +
-   `PANCHAM_AUTH_EMAIL_FROM` for the emails. Until a sender domain is verified with Resend, only the
+4. **`server/.env` on kamaji** (0600): `PANCHAM_ADMIN_EMAILS=you@example.com`, and an email provider:
+   `PANCHAM_SMTP_*` (e.g. Gmail with an app password) or `RESEND_API_KEY`, plus `PANCHAM_AUTH_EMAIL_FROM`
+   (see `.env.example`). Until a sender domain is verified with Resend, only the
    Resend account's owner gets mail; anyone else gets a code from `python3 server/auth_cli.py code <email>`.
 5. `bin/kamaji deploy pancham --yes`, then `bin/kamaji check`.
 6. **Build the app** with the token in `Config/Local.xcconfig` (see `Config/Pancham.xcconfig`).
+
+7. **Put your existing notations in the cloud, once:**
+   `python3 server/import_notations.py ~/Documents/Pancham --email you@example.com`. It signs in like the app
+   (type the emailed code), adds each notation as a private one, and skips any already there.
 
 Adding a person later is one more address in `PANCHAM_AUTH_EMAILS` and a restart of `com.harsh.pancham`.

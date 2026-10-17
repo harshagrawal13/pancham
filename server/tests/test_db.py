@@ -3,6 +3,7 @@
 Skips unless `brew install postgresql@18 postgrest dbmate` has been run.
 """
 
+import json
 import subprocess
 import sys
 import time
@@ -260,6 +261,26 @@ class Contract(unittest.TestCase):
         _, rows = self.s.rest("GET", "/revisions?select=seq,created_at&order=seq.asc", self.alice)
         stamps = [r["created_at"] for r in rows]
         self.assertEqual(stamps, sorted(stamps))
+
+    def test_importing_a_folder_adds_each_notation_once(self):
+        import tempfile
+        import import_notations as imp
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "Raag Yaman").mkdir()
+            (root / "Song.pancham").write_text(json.dumps(comp("Song")))
+            (root / "Raag Yaman" / "Geet.pancham").write_text(json.dumps(comp("Geet")))
+            (root / "Song.pancham.bak4beat").write_text(json.dumps(comp("backup")))   # a backup: ignored
+            (root / "Broken.pancham").write_text("not json")
+            base = f"http://127.0.0.1:{self.s.rest_port}"
+            out = []
+            self.assertEqual(imp.import_folder(base, self.alice, root, say=out.append), (2, 0, 1))
+            self.assertEqual(imp.import_folder(base, self.alice, root, say=out.append), (0, 2, 1))   # again: nothing new
+        _, docs = self.s.rest("GET", "/docs?select=name,folder&order=name.asc", self.alice)
+        mine = [(d["folder"], d["name"]) for d in docs if d["name"] in ("Song", "Geet")]
+        self.assertEqual(sorted(mine), [("", "Song"), ("Raag Yaman", "Geet")])
+        _, other = self.s.rest("GET", "/docs?select=name", self.bob)
+        self.assertNotIn("Song", [d["name"] for d in other])                    # private to the importer
 
     # --- sign-in and the database agree ------------------------------------------
     def test_a_token_from_the_sign_in_server_is_what_the_database_trusts(self):
