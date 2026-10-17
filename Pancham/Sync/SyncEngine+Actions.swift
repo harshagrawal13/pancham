@@ -42,7 +42,7 @@ extension SyncEngine {
     }
 
     func deletedNotations() async throws -> [RemoteDoc] {
-        try await api.deletedDocs()
+        try await api.deletedDocs(includeGlobal: isAdmin)
     }
 
     func undelete(_ doc: RemoteDoc) async throws {

@@ -11,7 +11,7 @@ struct RootView: View {
         Group {
             if let account = session.account {
                 LibraryEditor(prefs: prefs, session: session, account: account)
-                    .id(account.id)
+                    .id("\(account.id)-\(account.isAdmin)")      // new privileges, new workspace
             } else {
                 LoginView(session: session)
             }

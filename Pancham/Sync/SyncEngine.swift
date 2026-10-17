@@ -274,6 +274,17 @@ final class SyncEngine {
                     problems["delete \(p.docID)"] = "“\(p.name)” couldn't be deleted: \(error.localizedDescription)"
                     continue                                   // keep it queued; the rest carry on
                 case .permanent:
+                    if case .rejected = error, p.content != nil {
+                        // The stashed text was turned down (not valid JSON, say): delete without it, so the
+                        // notation still goes and the server keeps its last good version.
+                        do {
+                            try await api.save(id: p.docID, base: p.rev, name: p.name, folder: p.folder,
+                                               deleted: true, scope: p.scope)
+                        } catch {
+                            problems["delete \(p.docID)"] = "“\(p.name)” couldn't be deleted: \(error.localizedDescription)"
+                            continue
+                        }
+                    }
                     if case .conflict = error {                // changed under us twice running: try again next pass
                         problems["delete \(p.docID)"] = "“\(p.name)” couldn't be deleted yet: it keeps changing elsewhere"
                         continue

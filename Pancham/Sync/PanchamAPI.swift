@@ -72,11 +72,12 @@ final class PanchamAPI {
         return try Self.parseDocs(data).first
     }
 
-    /// Your deleted notations, newest first, without content. Deleting is a revision, so they can come back.
-    func deletedDocs() async throws -> [RemoteDoc] {
-        let data = try await rest("GET", "docs", query: [
-            URLQueryItem(name: "deleted", value: "eq.true"),
-            URLQueryItem(name: "scope", value: "eq.private"),
+    /// Your deleted notations, newest first, without content. Deleting is a revision, so they can come
+    /// back. Admins also get the global ones they can restore; everyone else sees only their own.
+    func deletedDocs(includeGlobal: Bool = false) async throws -> [RemoteDoc] {
+        var filters = [URLQueryItem(name: "deleted", value: "eq.true")]
+        if !includeGlobal { filters.append(URLQueryItem(name: "scope", value: "eq.private")) }
+        let data = try await rest("GET", "docs", query: filters + [
             URLQueryItem(name: "select", value: "id,scope,rev,seq,name,folder,deleted,updated_at,forked_from"),
             URLQueryItem(name: "order", value: "updated_at.desc"),
         ])

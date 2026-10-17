@@ -224,6 +224,43 @@ final class SyncIntegrationTests: XCTestCase {
         XCTAssertEqual(try title(of: Data(contentsOf: theirs)), "Raag Yaman v2")
     }
 
+    func testAnAdminCanBringBackADeletedGlobalNotationAndOthersDoNotSeeIt() async throws {
+        let admin = try await device("admin@test.dev")
+        let friend = try await device("friend@test.dev")
+        try write("Shared", to: admin.library("Yaman.pancham"))
+        await admin.engine.syncAndWait()
+        let shared = try admin.engine.publish(admin.library("Yaman.pancham"))
+        await admin.engine.syncAndWait()
+        admin.engine.libraryEvent(.willDelete(shared))
+        try FileManager.default.removeItem(at: shared)
+        admin.engine.libraryEvent(.deleted(shared))
+        await admin.engine.syncAndWait()
+
+        let adminSees = try await admin.engine.deletedNotations()
+        XCTAssertEqual(adminSees.map(\.scope), [.global])
+        let friendSees = try await friend.engine.deletedNotations()
+        XCTAssertTrue(friendSees.isEmpty)
+        try await admin.engine.undelete(adminSees[0])
+        XCTAssertTrue(FileManager.default.fileExists(atPath: shared.path))
+    }
+
+    func testADeleteWhoseStashedTextIsRejectedStillGoesThrough() async throws {
+        let a = try await device("me@test.dev")
+        let file = a.library("Song.pancham")
+        try write("good", to: file)
+        await a.engine.syncAndWait()
+        try Data("not json at all".utf8).write(to: file)               // unsynced and unusable
+        a.engine.libraryEvent(.willDelete(file))
+        try FileManager.default.removeItem(at: file)
+        a.engine.libraryEvent(.deleted(file))
+        await a.engine.syncAndWait()
+        XCTAssertEqual(a.engine.status, .idle)
+        let gone = try await a.engine.deletedNotations()
+        XCTAssertEqual(gone.map(\.name), ["Song"])
+        let head = try await a.api.head(of: gone[0].id)
+        XCTAssertEqual(try title(of: XCTUnwrap(head?.content)), "good")
+    }
+
     func testPrivateNotationsAreNotSharedBetweenAccounts() async throws {
         let me = try await device("me@test.dev")
         let friend = try await device("friend@test.dev")
