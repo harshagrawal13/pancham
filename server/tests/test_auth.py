@@ -317,6 +317,54 @@ class Routes(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertEqual(oct(data_dir.stat().st_mode & 0o777), "0o700")
 
+    def test_smtp_sender_delivers_through_a_mail_server(self):
+        import socketserver
+        got = {}
+
+        class Fake(socketserver.StreamRequestHandler):
+            def handle(self):
+                w = lambda s: self.wfile.write((s + "\r\n").encode())
+                w("220 fake")
+                data = False
+                for raw in self.rfile:
+                    line = raw.decode().rstrip()
+                    if not data:
+                        line = line.upper()                      # smtplib sends lowercase commands
+                    if data:
+                        if line == ".":
+                            data = False
+                            w("250 ok")
+                        else:
+                            got["body"] = got.get("body", "") + line + "\n"
+                    elif line.startswith("EHLO") or line.startswith("HELO"):
+                        w("250 fake")
+                    elif line.startswith("MAIL FROM"):
+                        got["from"] = line; w("250 ok")
+                    elif line.startswith("RCPT TO"):
+                        got["to"] = line.lower(); w("250 ok")
+                    elif line == "DATA":
+                        data = True; w("354 go")
+                    elif line == "QUIT":
+                        w("221 bye"); return
+
+        srv = socketserver.ThreadingTCPServer(("127.0.0.1", 0), Fake)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        self.addCleanup(srv.server_close)
+        self.addCleanup(srv.shutdown)
+        send = S.smtp_sender("127.0.0.1", srv.server_address[1], "", "", "Pancham <noreply@example.com>", tls=False)
+        self.assertTrue(send("owner@example.com", "Your Pancham code: 123456", "Your code for Pancham is 123456"))
+        self.assertIn("owner@example.com", got["to"])
+        self.assertIn("123456", got["body"])
+        self.assertFalse(S.smtp_sender("127.0.0.1", 1, "", "", "x@example.com", tls=False)("a@example.com", "s", "t"))
+
+    def test_an_email_provider_is_picked_from_the_settings(self):
+        base = dict(data_dir=self.tmp.name, postgrest_conf="/nonexistent", admin=[OWNER], warn=False)
+        env = {"PANCHAM_JWT_SECRET": SECRET}
+        _, none = S.build(env, **base)
+        self.assertIsNone(none)
+        _, smtp = S.build({**env, "PANCHAM_SMTP_HOST": "smtp.example.com", "PANCHAM_AUTH_EMAIL_FROM": "x@example.com"}, **base)
+        self.assertIsNotNone(smtp)
+
     def test_the_env_file_parser(self):
         p = Path(self.tmp.name) / ".env"
         p.write_text('# comment\nA=1\nB = "two words"\n  C=\'x\'\nbad line\nD=a=b\n')

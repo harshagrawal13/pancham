@@ -53,10 +53,17 @@ struct LibraryEditor: View {
     @State private var showTanpura: Bool = false
     @State private var historyTarget: SheetURL?
     @State private var showDeleted = false
+    /// Reduced motion keeps feedback but swaps slides for a short cross-fade (no vestibular motion).
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(prefs: Preferences, session: AuthSession, account: Account) {
         _prefs = Bindable(prefs)
         _ws = State(initialValue: LibraryWorkspace(session: session, account: account))
+    }
+
+    /// A full-screen overlay that wasn't thrown by a gesture shouldn't overshoot: critically damped.
+    private var overlayAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.2) : .spring(response: 0.4, dampingFraction: 1.0)
     }
 
     var body: some View {
@@ -105,19 +112,19 @@ struct LibraryEditor: View {
                     playback: playback,
                     onClose: { showNowPlaying = false }
                 )
-                .transition(.move(edge: .bottom))
+                .transition(reduceMotion ? .opacity : .move(edge: .bottom))
                 .zIndex(10)
             }
         }
         .overlay {
             if showTanpura {
                 TanpuraView(tuner: tuner, onClose: { showTanpura = false })
-                    .transition(.move(edge: .bottom))
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom))
                     .zIndex(11)
             }
         }
-        .animation(.spring(response: 0.45, dampingFraction: 0.86), value: showNowPlaying)
-        .animation(.spring(response: 0.45, dampingFraction: 0.86), value: showTanpura)
+        .animation(overlayAnimation, value: showNowPlaying)
+        .animation(overlayAnimation, value: showTanpura)
         .onChange(of: ws.selectedURL) { _, _ in
             playback.stop()
             showNowPlaying = false
@@ -410,6 +417,8 @@ struct ToolbarOutlineButton: ButtonStyle {
             .padding(.vertical, 6)
             .overlay(Rectangle().strokeBorder(Theme.ruleFaint, lineWidth: 1))
             .opacity(configuration.isPressed ? 0.6 : 1)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
@@ -425,6 +434,8 @@ struct ToolbarPrimaryButton: ButtonStyle {
             .padding(.vertical, 6)
             .background(Theme.ink)
             .opacity(configuration.isPressed ? 0.85 : 1)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 

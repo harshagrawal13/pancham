@@ -14,8 +14,8 @@ sees a request that Access refused.
 
 Errors are {"error_code": "...", "msg": "..."}.
 
-Who may sign in is the --admin / --allow list. Email goes out through Resend (RESEND_API_KEY and
-PANCHAM_AUTH_EMAIL_FROM in server/.env); until a sender domain is verified, Resend delivers only to
+Who may sign in is the --admin / --allow list. Email goes out through Resend (RESEND_API_KEY) or any SMTP account such as Gmail with an app
+password (PANCHAM_SMTP_*), plus PANCHAM_AUTH_EMAIL_FROM, all in server/.env; until a sender domain is verified, Resend delivers only to
 the account's owner, and `python3 server/auth_cli.py code <email>` on kamaji passes a code on by hand.
 """
 
@@ -23,7 +23,10 @@ import argparse
 import json
 import os
 import re
+import smtplib
+import ssl
 import sys
+from email.message import EmailMessage
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -90,6 +93,26 @@ def resend_sender(api_key, sender):
             with urllib.request.urlopen(req, timeout=15) as r:
                 return 200 <= r.status < 300
         except (urllib.error.URLError, TimeoutError, OSError):
+            return False
+    return send
+
+
+def smtp_sender(host, port, user, password, sender, tls=True):
+    """send(to, subject, text) -> bool, over plain SMTP: works with a Gmail account and an app password
+    (smtp.gmail.com:587), or any other mail provider. STARTTLS unless `tls` is off (tests only)."""
+    def send(to, subject, text):
+        msg = EmailMessage()
+        msg["From"], msg["To"], msg["Subject"] = sender, to, subject
+        msg.set_content(text)
+        try:
+            with smtplib.SMTP(host, port, timeout=15) as s:
+                if tls:
+                    s.starttls(context=ssl.create_default_context())
+                if user:
+                    s.login(user, password)
+                s.send_message(msg)
+            return True
+        except (smtplib.SMTPException, OSError):
             return False
     return send
 
@@ -194,9 +217,13 @@ def build(env, *, admin=(), allow=(), data_dir, postgrest_conf, warn=True):
     send = None
     if env.get("RESEND_API_KEY") and env.get("PANCHAM_AUTH_EMAIL_FROM"):
         send = resend_sender(env["RESEND_API_KEY"], env["PANCHAM_AUTH_EMAIL_FROM"])
+    elif env.get("PANCHAM_SMTP_HOST") and env.get("PANCHAM_AUTH_EMAIL_FROM"):
+        send = smtp_sender(env["PANCHAM_SMTP_HOST"], int(env.get("PANCHAM_SMTP_PORT") or 587),
+                           env.get("PANCHAM_SMTP_USER", ""), env.get("PANCHAM_SMTP_PASSWORD", ""),
+                           env["PANCHAM_AUTH_EMAIL_FROM"], tls=env.get("PANCHAM_SMTP_TLS", "1") != "0")
     elif warn:
-        print("warning: RESEND_API_KEY / PANCHAM_AUTH_EMAIL_FROM not set; codes can only be passed on by hand",
-              file=sys.stderr)
+        print("warning: no email provider set (RESEND_API_KEY, or PANCHAM_SMTP_HOST) with PANCHAM_AUTH_EMAIL_FROM; "
+              "codes can only be passed on by hand", file=sys.stderr)
     auth = Auth(str(data_dir / "auth.sqlite"), resolve_jwt_secret(env, postgrest_conf),
                 allowed_emails=allowed, admin_emails=admins)
     return auth, send
