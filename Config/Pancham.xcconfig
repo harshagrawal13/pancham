@@ -1,0 +1,9 @@
+// Build settings shared by every configuration. Local.xcconfig is yours alone (gitignored):
+//
+//   PANCHAM_ACCESS_CLIENT_ID = <the Cloudflare Access service token's id>
+//   PANCHAM_ACCESS_CLIENT_SECRET = <its secret>
+//
+// They end up in Info.plist and are sent as CF-Access-Client-Id / -Secret on every request, which
+// is what gets a request through kamaji's tunnel. Leave them out when the server is on this Mac.
+// (Server URLs are not set here: an xcconfig value can't contain "//".)
+#include? "Local.xcconfig"

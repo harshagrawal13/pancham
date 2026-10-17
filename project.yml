@@ -6,6 +6,10 @@ options:
     macOS: "15.0"
   createIntermediateGroups: true
 
+configFiles:
+  Debug: Config/Pancham.xcconfig
+  Release: Config/Pancham.xcconfig
+
 settings:
   base:
     SWIFT_VERSION: "5.10"
@@ -21,7 +25,45 @@ settings:
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     COMBINE_HIDPI_IMAGES: YES
 
+schemes:
+  Pancham:
+    build:
+      targets:
+        Pancham: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - PanchamTests
+    profile:
+      config: Release
+    archive:
+      config: Release
+
 targets:
+  PanchamTests:
+    type: bundle.unit-test
+    platform: macOS
+    # Sync/ is Foundation-only, so it is tested on its own against a real local backend
+    # (server/dev_stack.py) without launching the app.
+    sources:
+      - path: PanchamTests
+      - path: Pancham/Sync
+      # The editor's save path (LibraryWorkspace) and what it needs, so it can be tested without a window.
+      - path: Pancham/App/LibraryWorkspace.swift
+      - path: Pancham/App/Library.swift
+      - path: Pancham/App/Preferences.swift
+      - path: Pancham/Document/Composition.swift
+      - path: Pancham/Document/Taal.swift
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_NAME: PanchamTests
+        PRODUCT_MODULE_NAME: PanchamTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.harshagrawal.pancham.tests
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: NO
   Pancham:
     type: application
     platform: macOS

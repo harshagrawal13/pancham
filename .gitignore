@@ -25,3 +25,6 @@ Tools/cache/
 Tools/cache_tabla/
 __pycache__/
 *.pyc
+
+# Per-developer build settings (see Config/Pancham.xcconfig)
+Config/Local.xcconfig

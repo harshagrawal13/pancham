@@ -1,37 +1,43 @@
 import SwiftUI
 import AppKit
 
+/// One of the two libraries the sidebar lists, and what the signed-in account may do in it.
+private struct SidebarSection {
+    let library: Library
+    let scope: SyncScope
+    let title: String
+    var isGlobal: Bool { scope == .global }
+}
+
+/// Your library on top, the global library (shared, made by admins) below it.
 struct LibrarySidebar: View {
     @Bindable var library: Library
-    let username: String
+    @Bindable var global: Library
+    let account: Account
+    let engine: SyncEngine
     @Binding var selectedURL: URL?
-    let onNewFile: () -> Void
-    let onNewFolder: () -> Void
-    let onNewFileIn: (LibraryFolder) -> Void
+    let onNewFile: (Library) -> Void
+    let onNewFolder: (Library) -> Void
+    let onNewFileIn: (Library, LibraryFolder) -> Void
     let onRename: (RenameTarget) -> Void
     let onDelete: (URL) -> Void
-    let onSwitchUser: () -> Void
+    let onAddToLibrary: (URL) -> Void
+    let onPublish: (URL) -> Void
+    let onRecentlyDeleted: () -> Void
+    let onSignOut: () -> Void
 
     @State private var expanded: Set<URL> = []
 
     var body: some View {
         VStack(spacing: 0) {
-            header
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    if !library.looseFiles.isEmpty {
-                        ForEach(library.looseFiles) { f in
-                            fileRow(f).padding(.leading, 10)
-                        }
-                        Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1)
-                            .padding(.vertical, 6)
-                    }
-                    ForEach(library.folders) { folder in
-                        folderNode(folder)
-                    }
+                    section(SidebarSection(library: library, scope: .private, title: "Library"),
+                            caption: libraryCaption(library))
+                    section(SidebarSection(library: global, scope: .global, title: "Global library"),
+                            caption: globalCaption)
+                        .padding(.top, 6)
                 }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 6)
             }
             .scrollContentBackground(.hidden)
             footer
@@ -43,35 +49,76 @@ struct LibrarySidebar: View {
         }
     }
 
-    // MARK: Header
+    // MARK: Sections
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Library")
-                    .font(Theme.display(18, weight: .medium))
-                    .foregroundStyle(Theme.paper)
-                Spacer()
-                HStack(spacing: 4) {
-                    sidebarIconButton("plus", help: "New notation", action: onNewFile)
-                    sidebarIconButton("folder.badge.plus", help: "New folder", action: onNewFolder)
+    @ViewBuilder
+    private func section(_ sec: SidebarSection, caption: String) -> some View {
+        let lib = sec.library, isGlobal = sec.isGlobal
+        VStack(alignment: .leading, spacing: 0) {
+            header(sec, caption: caption)
+            VStack(alignment: .leading, spacing: 0) {
+                if lib.totalCount == 0 && lib.folders.isEmpty {
+                    Text(isGlobal ? "Nothing shared yet." : "No notations yet.")
+                        .font(Theme.display(13)).italic()
+                        .foregroundStyle(Color.white.opacity(0.45))
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                }
+                if !lib.looseFiles.isEmpty {
+                    ForEach(lib.looseFiles) { f in
+                        fileRow(f, in: sec).padding(.leading, 10)
+                    }
+                    if !lib.folders.isEmpty {
+                        Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1).padding(.vertical, 6)
+                    }
+                }
+                ForEach(lib.folders) { folder in
+                    folderNode(folder, in: sec)
                 }
             }
-            Text(libraryCaption)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 6)
+        }
+    }
+
+    @ViewBuilder
+    private func header(_ sec: SidebarSection, caption: String) -> some View {
+        let lib = sec.library, title = sec.title, isGlobal = sec.isGlobal, editable = account.canEdit(sec.scope)
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(title)
+                    .font(Theme.display(isGlobal ? 16 : 18, weight: .medium))
+                    .foregroundStyle(Theme.paper)
+                Spacer()
+                if editable {
+                    HStack(spacing: 4) {
+                        sidebarIconButton("plus", help: isGlobal ? "New global notation" : "New notation") { onNewFile(lib) }
+                        sidebarIconButton("folder.badge.plus", help: "New folder") { onNewFolder(lib) }
+                    }
+                }
+            }
+            Text(caption)
                 .font(Theme.ui(11))
                 .tracking(0.4).textCase(.uppercase)
                 .foregroundStyle(Color.white.opacity(0.55))
         }
-        .padding(.init(top: 18, leading: 18, bottom: 14, trailing: 12))
+        .padding(.init(top: isGlobal ? 14 : 18, leading: 18, bottom: 12, trailing: 12))
+        .overlay(alignment: .top) {
+            if isGlobal { Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1) }
+        }
         .overlay(alignment: .bottom) {
             Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1)
         }
     }
 
-    private var libraryCaption: String {
-        let c = library.totalCount
-        let f = library.folders.count
+    private func libraryCaption(_ lib: Library) -> String {
+        let c = lib.totalCount
+        let f = lib.folders.count
         return "\(c) \(c == 1 ? "composition" : "compositions") · \(f) \(f == 1 ? "folder" : "folders")"
+    }
+
+    private var globalCaption: String {
+        let c = global.totalCount
+        return account.isAdmin ? "\(c) shared · you manage these" : "\(c) shared · read only"
     }
 
     private func sidebarIconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
@@ -89,28 +136,27 @@ struct LibrarySidebar: View {
     // MARK: Folder / File rows
 
     @ViewBuilder
-    private func folderNode(_ folder: LibraryFolder) -> some View {
+    private func folderNode(_ folder: LibraryFolder, in sec: SidebarSection) -> some View {
+        let lib = sec.library, editable = account.canEdit(sec.scope)
         let isOpen = expanded.contains(folder.url) || folder.files.contains(where: { $0.url == selectedURL })
         VStack(alignment: .leading, spacing: 0) {
             FolderRow(
                 folder: folder,
                 isOpen: isOpen,
+                canAdd: editable,
                 onToggle: { toggle(folder.url) },
-                onAdd: { onNewFileIn(folder) }
+                onAdd: { onNewFileIn(lib, folder) }
             )
             .contextMenu {
-                Button("New notation in \(folder.name)") { onNewFileIn(folder) }
-                Divider()
-                Button("Rename…") {
-                    onRename(RenameTarget(url: folder.url,
-                                          originalName: folder.name,
-                                          isFolder: true))
+                if editable {
+                    Button("New notation in \(folder.name)") { onNewFileIn(lib, folder) }
+                    Divider()
+                    Button("Rename…") {
+                        onRename(RenameTarget(url: folder.url, originalName: folder.name, isFolder: true))
+                    }
+                    Divider()
+                    Button("Move to Trash", role: .destructive) { onDelete(folder.url) }
                 }
-                Button("Show in Finder") {
-                    NSWorkspace.shared.activateFileViewerSelecting([folder.url])
-                }
-                Divider()
-                Button("Move to Trash", role: .destructive) { onDelete(folder.url) }
             }
 
             if let sub = folder.subtitle, !sub.isEmpty, isOpen {
@@ -121,7 +167,7 @@ struct LibrarySidebar: View {
             }
             if isOpen {
                 ForEach(folder.files) { file in
-                    fileRow(file).padding(.leading, 6)
+                    fileRow(file, in: sec).padding(.leading, 6)
                 }
             }
         }
@@ -129,7 +175,8 @@ struct LibrarySidebar: View {
     }
 
     @ViewBuilder
-    private func fileRow(_ file: LibraryFile) -> some View {
+    private func fileRow(_ file: LibraryFile, in sec: SidebarSection) -> some View {
+        let editable = account.canEdit(sec.scope), isGlobal = sec.isGlobal
         let isActive = selectedURL == file.url
         Button(action: { selectedURL = file.url }) {
             VStack(alignment: .leading, spacing: 1) {
@@ -156,16 +203,21 @@ struct LibrarySidebar: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("Rename…") {
-                onRename(RenameTarget(url: file.url,
-                                      originalName: file.url.deletingPathExtension().lastPathComponent,
-                                      isFolder: false))
+            if isGlobal {
+                Button("Add to my library") { onAddToLibrary(file.url) }
+            } else if account.isAdmin {
+                Button("Publish a copy to the global library") { onPublish(file.url) }
+                Divider()
             }
-            Button("Show in Finder") {
-                NSWorkspace.shared.activateFileViewerSelecting([file.url])
+            if editable {
+                Button("Rename…") {
+                    onRename(RenameTarget(url: file.url,
+                                          originalName: file.url.deletingPathExtension().lastPathComponent,
+                                          isFolder: false))
+                }
+                Divider()
+                Button("Move to Trash", role: .destructive) { onDelete(file.url) }
             }
-            Divider()
-            Button("Move to Trash", role: .destructive) { onDelete(file.url) }
         }
     }
 
@@ -178,11 +230,10 @@ struct LibrarySidebar: View {
         if expanded.contains(url) { expanded.remove(url) } else { expanded.insert(url) }
     }
 
-    // MARK: Footer
-
     struct FolderRow: View {
         let folder: LibraryFolder
         let isOpen: Bool
+        let canAdd: Bool
         let onToggle: () -> Void
         let onAdd: () -> Void
         @State private var hovering = false
@@ -199,7 +250,7 @@ struct LibrarySidebar: View {
                         .foregroundStyle(Theme.paper)
                         .lineLimit(1)
                     Spacer(minLength: 4)
-                    if hovering {
+                    if hovering && canAdd {
                         Button(action: onAdd) {
                             Image(systemName: "plus")
                                 .font(.system(size: 10, weight: .medium))
@@ -225,21 +276,41 @@ struct LibrarySidebar: View {
         }
     }
 
+    // MARK: Footer
+
     private var footer: some View {
-        HStack {
-            Text(username)
-                .font(Theme.ui(11))
-                .foregroundStyle(Theme.paper)
-            Spacer()
-            Button(action: onSwitchUser) {
-                HStack(spacing: 4) {
-                    Text("Switch")
-                    Text("→")
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(account.email)
+                    .font(Theme.ui(11))
+                    .foregroundStyle(Theme.paper)
+                    .lineLimit(1).truncationMode(.middle)
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(engine.hasProblem ? Theme.danger : Color.white.opacity(0.45))
+                        .frame(width: 5, height: 5)
+                    Text(engine.statusText)
+                        .font(Theme.ui(10)).tracking(0.3)
+                        .foregroundStyle(engine.hasProblem ? Color(hex: 0xE0A0A0) : Color.white.opacity(0.55))
+                        .lineLimit(1)
+                        .help(engine.statusText)
                 }
-                .font(Theme.ui(11))
-                .foregroundStyle(Color.white.opacity(0.6))
             }
-            .buttonStyle(.plain)
+            Spacer(minLength: 4)
+            Menu {
+                if account.isAdmin { Text("Admin") }
+                Button("Recently deleted…", action: onRecentlyDeleted)
+                Divider()
+                Button("Sign out", action: onSignOut)
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Theme.paper.opacity(0.8))
+                    .frame(width: 24, height: 24)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
