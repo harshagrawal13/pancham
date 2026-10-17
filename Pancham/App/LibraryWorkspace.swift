@@ -18,7 +18,6 @@ final class LibraryWorkspace {
 
     var selectedURL: URL?
     private(set) var composition = Composition()
-    private(set) var legacyLibraries: [Preferences.LegacyLibrary] = []
     private(set) var notice: String?
 
     /// Which file `composition` currently reflects. Saves only run for it, so a notation that is
@@ -46,7 +45,6 @@ final class LibraryWorkspace {
             selectedURL = library.looseFiles.first?.url ?? library.folders.flatMap(\.files).first?.url
         }
         loadSelected()
-        if engine.storage.claimsLegacyLibrary(), !engine.storage.legacyImportAnswered { legacyLibraries = Preferences.legacyLibraries() }
     }
 
     func stop() { engine.stop() }
@@ -99,19 +97,6 @@ final class LibraryWorkspace {
             selectedURL = dest
             engine.kick()
         }
-    }
-
-    func importLegacy() {
-        let made = engine.importFiles(legacyLibraries.flatMap(\.files), note: "imported from this Mac's earlier library")
-        skipLegacy()
-        library.reload()
-        flash("Imported \(made.count) \(made.count == 1 ? "notation" : "notations").")
-        engine.kick(after: 0.2)
-    }
-
-    func skipLegacy() {
-        engine.storage.markLegacyImportAnswered()
-        legacyLibraries = []
     }
 
     private func flash(_ message: String) {

@@ -79,18 +79,4 @@ extension SyncEngine {
         register(newFile: target, scope: .global, forkedFrom: nil, note: "published from a private notation")
         return target
     }
-
-    /// Bring files from outside (an old library folder) in as new notations.
-    func importFiles(_ files: [(source: URL, folder: String)], note: String) -> [URL] {
-        var made: [URL] = []
-        for (source, folder) in files {
-            guard let data = try? Data(contentsOf: source) else { continue }
-            let base = sanitizeFileName(source.deletingPathExtension().lastPathComponent)
-            let target = uniqueURL(in: storage.directory(storage.libraryRoot, folder: folder), base: base)
-            guard (try? storage.write(data, to: target)) != nil else { continue }
-            register(newFile: target, scope: .private, forkedFrom: nil, note: note)
-            made.append(target)
-        }
-        return made
-    }
 }

@@ -197,9 +197,6 @@ struct LibraryEditor: View {
                 ws.library.reload()
             }
         }
-        .sheet(isPresented: Binding(get: { !ws.legacyLibraries.isEmpty }, set: { _ in })) {
-            LegacyImportSheet(libraries: ws.legacyLibraries, onImport: ws.importLegacy, onSkip: ws.skipLegacy)
-        }
     }
 
 }

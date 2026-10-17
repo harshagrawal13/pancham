@@ -592,16 +592,6 @@ final class SyncIntegrationTests: XCTestCase {
         XCTAssertLessThanOrEqual(sanitizeFileName(long).utf8.count, 200)
     }
 
-    func testOnlyTheFirstAccountOnAMacIsOfferedTheOldLibrary() throws {
-        let base = FileManager.default.temporaryDirectory.appendingPathComponent("pn-legacy-\(UUID().uuidString.prefix(8))")
-        defer { try? FileManager.default.removeItem(at: base) }
-        let first = AccountStorage(account: Account(id: UUID(), email: "a@test.dev", isAdmin: true), base: base)
-        let second = AccountStorage(account: Account(id: UUID(), email: "b@test.dev", isAdmin: false), base: base)
-        XCTAssertTrue(first.claimsLegacyLibrary())
-        XCTAssertFalse(second.claimsLegacyLibrary())
-        XCTAssertTrue(first.claimsLegacyLibrary())
-    }
-
     func testAnEmptyAccountPullsOnceNotOnEveryPass() async throws {
         let a = try await device("me@test.dev")
         await a.engine.syncAndWait()

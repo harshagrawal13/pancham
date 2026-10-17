@@ -211,38 +211,3 @@ struct RecentlyDeletedView: View {
         .overlay(alignment: .bottom) { Rectangle().fill(Theme.ruleFaint.opacity(0.6)).frame(height: 1) }
     }
 }
-
-/// First sign-in on a Mac that has notations from before accounts existed.
-struct LegacyImportSheet: View {
-    let libraries: [Preferences.LegacyLibrary]
-    let onImport: () -> Void
-    let onSkip: () -> Void
-
-    private var count: Int { libraries.reduce(0) { $0 + $1.files.count } }
-
-    var body: some View {
-        SheetCard(eyebrow: "Welcome",
-                  title: "Bring your notations along?",
-                  subtitle: "Pancham found \(count) \(count == 1 ? "notation" : "notations") saved on this Mac from before you signed in. Importing adds them to your account, where they're backed up with a full history and available on every Mac you sign in on. The originals aren't touched.") {
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(libraries) { lib in
-                    HStack(spacing: 8) {
-                        Image(systemName: "folder").foregroundStyle(Theme.muted)
-                        Text((lib.folder.path as NSString).abbreviatingWithTildeInPath)
-                            .font(Theme.ui(11.5)).foregroundStyle(Theme.ink).lineLimit(1).truncationMode(.middle)
-                        Spacer()
-                        Text("\(lib.files.count)").font(Theme.ui(11)).foregroundStyle(Theme.muted)
-                    }
-                }
-            }
-            .padding(12)
-            .overlay(Rectangle().strokeBorder(Theme.ruleFaint, lineWidth: 1))
-            HStack {
-                Spacer()
-                Button("Not now", action: onSkip).buttonStyle(OutlineButtonStyle())
-                Button("Import \(count)", action: onImport).buttonStyle(FilledButtonStyle())
-            }
-            .padding(.top, 22)
-        }
-    }
-}

@@ -75,23 +75,6 @@ struct AccountStorage {
         root.appendingPathComponent(path)
     }
 
-    /// A marker beside the cache folder (not inside it, so wiping the cache doesn't re-ask) that says the
-    /// "bring my old notations along?" question has been answered.
-    /// The first account to sign in on this Mac is the one the old, pre-account notations belong to; no
-    /// later account is ever offered them (they could otherwise import someone else's notations).
-    func claimsLegacyLibrary() -> Bool {
-        let owner = root.deletingLastPathComponent().appendingPathComponent("legacy-owner")
-        if let existing = try? String(contentsOf: owner, encoding: .utf8) { return existing == root.lastPathComponent }
-        try? root.lastPathComponent.write(to: owner, atomically: true, encoding: .utf8)
-        return true
-    }
-
-    private var legacyMarker: URL {
-        root.deletingLastPathComponent().appendingPathComponent("legacy-import-answered-\(root.lastPathComponent)")
-    }
-    var legacyImportAnswered: Bool { FileManager.default.fileExists(atPath: legacyMarker.path) }
-    func markLegacyImportAnswered() { FileManager.default.createFile(atPath: legacyMarker.path, contents: Data()) }
-
     func scope(of url: URL) -> SyncScope { isGlobal(url) ? .global : .private }
 
     func directory(_ root: URL, folder: String) -> URL {

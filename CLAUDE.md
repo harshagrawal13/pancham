@@ -19,7 +19,7 @@ xcodebuild -project Pancham.xcodeproj -scheme Pancham -destination 'platform=mac
 
 Single target `Pancham`, built from source under `Pancham/`:
 
-- `App/PanchamApp.swift` — `@main`, one `WindowGroup` showing `RootView`. `App/Library.swift` scans a folder of `.pancham` files (and reports renames/deletes to sync); `App/Preferences.swift` holds the pending-open URL and finds libraries from before sign-in.
+- `App/PanchamApp.swift` — `@main`, one `WindowGroup` showing `RootView`. `App/Library.swift` scans a folder of `.pancham` files (and reports renames/deletes to sync); `App/Preferences.swift` holds the pending-open URL.
 - `Document/`
   - `PanchamDocument.swift` — `FileDocument` conforming to `.panchamNotation` UTType. Wraps a `Composition`.
   - `Composition.swift` — `Composition`, `CompositionSection`, `Line`, `LineType`. All `Codable`. `CompositionSection` is named to avoid collision with `SwiftUI.Section`. `Line.init(from:)` accepts both the `{ type, cells }` shape and the legacy bare-array shape from old web-app exports (see `migrateLine` in the pre-refactor `app.js`).
