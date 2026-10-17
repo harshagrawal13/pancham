@@ -187,6 +187,10 @@ begin
       raise sqlstate 'PT400' using message = 'content is required to create a notation';
     end if;
     eff := p_content;
+    -- a foreign key check ignores row level security, so only name sources the caller can see
+    if p_forked_from is not null and not exists (select 1 from public.documents where id = p_forked_from) then
+      raise sqlstate 'PT404' using message = 'no such notation to copy from';
+    end if;
     insert into public.documents (id, scope, owner, forked_from) values (p_doc, p_scope, me, p_forked_from);
     new_rev := 1;
   else

@@ -53,7 +53,9 @@ def main(argv=None):
     auth = A.Auth(str(Path(tmp.name) / "auth.sqlite"), stack.SECRET, allowed_emails=args.allow, admin_emails=args.admin)
 
     def write_code(to, subject, text):
-        (codes / (re.sub(r"[^a-z0-9@._-]", "_", to.lower()) + ".txt")).write_text(text.split("Your code for Pancham is ")[1][:6])
+        path = codes / (re.sub(r"[^a-z0-9@._-]", "_", to.lower()) + ".txt")
+        path.write_text(text.split("Your code for Pancham is ")[1][:6])
+        path.chmod(0o600)
         return True
 
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), S.make_handler(auth, send_email=write_code,

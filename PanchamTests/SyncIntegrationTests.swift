@@ -547,6 +547,12 @@ final class SyncIntegrationTests: XCTestCase {
         XCTAssertEqual(try title(of: XCTUnwrap(head?.content)), "synced")
     }
 
+    func testNamesCannotWalkOutOfTheCacheFolder() {
+        for bad in ["..", ".", "...", "  ..  ", ""] { XCTAssertEqual(sanitizeFileName(bad), "Untitled", bad) }
+        XCTAssertEqual(sanitizeFileName("../x"), "..x")                      // slashes are already removed
+        XCTAssertEqual(sanitizeFileName("Raag Yaman"), "Raag Yaman")
+    }
+
     func testOnlyTheFirstAccountOnAMacIsOfferedTheOldLibrary() throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent("pn-legacy-\(UUID().uuidString.prefix(8))")
         defer { try? FileManager.default.removeItem(at: base) }

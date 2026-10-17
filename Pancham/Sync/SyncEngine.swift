@@ -15,7 +15,8 @@ func sanitizeFileName(_ s: String) -> String {
     let trimmed = s.trimmingCharacters(in: .whitespaces)
     let banned = CharacterSet(charactersIn: "/\\:?%*|\"<>")
     let cleaned = String(String.UnicodeScalarView(trimmed.unicodeScalars.filter { !banned.contains($0) }))
-    return cleaned.isEmpty ? "Untitled" : cleaned
+    // "." and ".." survive the character filter but would walk out of the cache folder.
+    return cleaned.isEmpty || cleaned.allSatisfy({ $0 == "." }) ? "Untitled" : cleaned
 }
 
 /// Keeps the local cache and the server in step, without ever losing an edit.

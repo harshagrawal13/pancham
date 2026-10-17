@@ -192,6 +192,13 @@ class Contract(unittest.TestCase):
         _, orig = self.s.rest("GET", f"/docs?id=eq.{g}&select=content", self.alice)
         self.assertEqual(orig[0]["content"]["title"], "Shared")
 
+    def test_copying_from_a_notation_you_cannot_see_is_refused(self):
+        alices = self.new_doc(self.alice)
+        status, body = self.save(self.bob, str(uuid.uuid4()), 0, p_forked_from=alices)
+        self.assertEqual((status, body["message"]), (404, "no such notation to copy from"))
+        status, _ = self.save(self.bob, str(uuid.uuid4()), 0, p_forked_from=str(uuid.uuid4()))
+        self.assertEqual(status, 404)                              # same answer whether it exists or not
+
     # --- history can't be rewritten ----------------------------------------------
     def test_no_one_can_edit_or_remove_a_revision_through_the_api(self):
         doc = self.new_doc(self.alice)
