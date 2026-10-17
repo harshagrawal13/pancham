@@ -1,0 +1,18 @@
+# Pancham's notation library. server/server.py answers the sign-in routes on 8005; the app's
+# documents go straight to PostgREST on 3004 with the JWT server.py signs (db/migrations/*_init.sql,
+# "Who is asking"), as jiji's phones do. The Access application is "pancham", policy "pancham-app":
+# Service Auth with the service token that Pancham.app is built with (Config/Local.xcconfig).
+# Who may sign in, and who is an admin, is in server/.env on kamaji, never in git.
+[apps.pancham]
+repo = "harshagrawal13/pancham"
+checkout = "~/Developer/personal/pancham"
+branch = "main"
+database = true
+postgrest_port = 3004
+agents = ["com.harsh.postgrest-pancham", "com.harsh.pancham"]
+smoke = "http://127.0.0.1:8005/health"
+access_aud = "<the AUD tag of the Access application: Additional settings>"
+
+[apps.pancham.hostnames]
+"pancham.harsh-agrawal.com" = 8005
+"pancham-api.harsh-agrawal.com" = 3004

@@ -8,43 +8,64 @@
 
 /* Begin PBXBuildFile section */
 		00E03BEC48A950A3E2E9DA0A /* PerformanceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */; };
+		041BDD929ED916FB493D0E0B /* SyncEngine+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 503FFDE9887F1D1D90F2A92B /* SyncEngine+Actions.swift */; };
 		0C8D26F0E64FA0A1C6E89DFC /* PanchamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0361C25F57AA062E3D16EECD /* PanchamApp.swift */; };
 		113F435C45DBCB7BEFB8AEAE /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C1D3904E05B5497CCEEF32 /* NotesView.swift */; };
-		137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91AC2363B881B80866FB0998 /* UserPickerView.swift */; };
 		1603CF1F3E61D85D5B611892 /* SwaraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */; };
 		170FCE84B69AC517D5D623CB /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = 5589A9D734A057EAAF4D63B5 /* Fonts */; };
 		18CBA1CF0DF5D18153B5221E /* tanpura.wav in Resources */ = {isa = PBXBuildFile; fileRef = 316BC8CDC09C2879AF14397C /* tanpura.wav */; };
 		1DC8BFB9B3722124E19FA3EA /* Composition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C55FF8295E7B84C55136E2 /* Composition.swift */; };
 		2276D97813C106F293ECB9F5 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18986CFD0E0C620BB1A95A86 /* CellView.swift */; };
 		22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BBCA391BB26CF3A46761DB /* Theka.swift */; };
+		29118E823E1EF5A82F883F98 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD2659571A286633F9D6307 /* SyncEngine.swift */; };
+		2E4E4436140F3FB76FA69C13 /* ServerConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB4537B9E3ECAD1F70859E8 /* ServerConfig.swift */; };
 		32008B14F2B4FBA887D72215 /* TunerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491EBB6D5C534DF869AA2AC6 /* TunerEngine.swift */; };
 		37770072709F7ABA49DE4446 /* NotationGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520E55DD8E2A47FB1684C497 /* NotationGridView.swift */; };
 		48381BA82FCAC4C772D9CB9A /* vsco-strings.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */; };
 		49A1690ED7F8288A6FC9763D /* SectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D47E328242951C82246D193 /* SectionView.swift */; };
 		4BCA4D215C508C6317DFB8C5 /* tabla.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = DAFB46DA9CB1641F3498029F /* tabla.sf2 */; };
+		4E0E72583AED0F2B672D1E61 /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C677E1B8B9109EF84D53F9E /* AuthSession.swift */; };
+		507E178ECFE2FE827DE0D47D /* SyncState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AB5FD041BDC4F596B33DEA1 /* SyncState.swift */; };
+		59AFD25D893414B50AAE4A2E /* SyncState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AB5FD041BDC4F596B33DEA1 /* SyncState.swift */; };
 		5CEBC7609E07DE393888D1B0 /* LibrarySidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */; };
+		5DCC02B8CC3CBD955CA21C7A /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADC0513DB717581EB37954B /* Library.swift */; };
+		5E4D497C84EF06112374E350 /* SyncEngine+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 503FFDE9887F1D1D90F2A92B /* SyncEngine+Actions.swift */; };
 		5E974C7ADD58B0073933010B /* TanpuraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6E61F348F6469692CBA441 /* TanpuraView.swift */; };
+		6CF47AB9BBBD1C50BFD1E3CD /* LibraryWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8592AB2564FB61F28FC3014B /* LibraryWorkspace.swift */; };
+		6EB26B0A3670E3B33D1AE496 /* HistorySheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26170F64CB3E9181DAB4519C /* HistorySheets.swift */; };
+		7DA7B57CF6F936D0C5C603D1 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB497E899D624CDFB8E1AAF /* Preferences.swift */; };
 		7DC5E83A534CAAC5823D445A /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086601BA8121576F9CAB43A /* NowPlayingView.swift */; };
 		7E0E9B7CAAF45C9270BE822A /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */; };
+		8011EF76228266A42D91AC9D /* SyncIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F26A18DEB9EFD85782FAB441 /* SyncIntegrationTests.swift */; };
+		8210F9F70EE31D0A90834DBA /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD2659571A286633F9D6307 /* SyncEngine.swift */; };
 		824E8DA6D206BAB0BE9B6BF2 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADC0513DB717581EB37954B /* Library.swift */; };
 		8625E0679B53E1FEF5155929 /* vsco-organ.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = 38EB984CA50B616600C41939 /* vsco-organ.sf2 */; };
+		977A81F118D1E4F1ACAC8064 /* Composition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C55FF8295E7B84C55136E2 /* Composition.swift */; };
 		97B33B568A33A8ABE78F44AD /* MetaHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */; };
 		AA60B142A7D78EC47BFA6D00 /* Taal.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */; };
+		AC0E160211C51E2B583F572D /* PanchamAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A7485A7EEE217AAF2D64E56 /* PanchamAPI.swift */; };
+		AD298FDB41420BDFAA40A29E /* PanchamAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A7485A7EEE217AAF2D64E56 /* PanchamAPI.swift */; };
 		ADAB9E35D5247B5B4342D22D /* LegendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */; };
 		B6CC6314BE0CBB6BCF46B0F3 /* SwaraParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FDDBD5B8DE1D48141FCD5DD /* SwaraParser.swift */; };
+		B7D6F4CF2CFBFBCEF717286F /* AuthSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C677E1B8B9109EF84D53F9E /* AuthSession.swift */; };
 		BC09B2F4B50B35A81A6AEFCC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 643BF03D9A3D6D6855AF3333 /* Assets.xcassets */; };
+		C69596D7C23D8A590D3EA192 /* WorkspaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CB7CD712C5CD7DFF4890EF /* WorkspaceTests.swift */; };
 		C6B965966DF247B822E6B0AF /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA7203A312C5EA5150CBEFF /* RootView.swift */; };
-		CA441298DE1D36A385944FE3 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83587F3407B45EF8C728AE9C /* OnboardingView.swift */; };
 		D1B2B80495445E09BC6F4FE0 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006C821A3F16274366F3E9F1 /* Theme.swift */; };
+		DA2BFC6C65D9384CE60E23A4 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0FC8A0D2D47F3AE59ACA4CB /* LoginView.swift */; };
+		DC949112DBD1A83FC8FEC6EE /* LibraryWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8592AB2564FB61F28FC3014B /* LibraryWorkspace.swift */; };
 		E07A5788392DB67DF4C32514 /* PanchamLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E100E422285CF28DFC5160 /* PanchamLogo.swift */; };
 		E972F44D7454DCF83365B2AF /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3A4F5F934B314C7F2A25E9 /* EditorView.swift */; };
 		ECB20A3EE2A5628B7C760050 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB497E899D624CDFB8E1AAF /* Preferences.swift */; };
+		FB8006DA796F20F4A58109A6 /* Taal.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */; };
+		FF8A33D681DB1D5D0FD9F496 /* ServerConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB4537B9E3ECAD1F70859E8 /* ServerConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		006C821A3F16274366F3E9F1 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		0361C25F57AA062E3D16EECD /* PanchamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanchamApp.swift; sourceTree = "<group>"; };
 		09044E1AA4DCB3A8F05403A9 /* PlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackEngine.swift; sourceTree = "<group>"; };
+		0A7485A7EEE217AAF2D64E56 /* PanchamAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanchamAPI.swift; sourceTree = "<group>"; };
 		0EA7203A312C5EA5150CBEFF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		18986CFD0E0C620BB1A95A86 /* CellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellView.swift; sourceTree = "<group>"; };
 		19E100E422285CF28DFC5160 /* PanchamLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanchamLogo.swift; sourceTree = "<group>"; };
@@ -52,13 +73,18 @@
 		1D47E328242951C82246D193 /* SectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionView.swift; sourceTree = "<group>"; };
 		21C1D3904E05B5497CCEEF32 /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		242715F6824A883FDEDF2F3B /* Pancham.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pancham.entitlements; sourceTree = "<group>"; };
+		26170F64CB3E9181DAB4519C /* HistorySheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistorySheets.swift; sourceTree = "<group>"; };
+		2C677E1B8B9109EF84D53F9E /* AuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSession.swift; sourceTree = "<group>"; };
 		2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegendView.swift; sourceTree = "<group>"; };
 		3086601BA8121576F9CAB43A /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
 		316BC8CDC09C2879AF14397C /* tanpura.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = tanpura.wav; sourceTree = "<group>"; };
 		31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebar.swift; sourceTree = "<group>"; };
 		38EB984CA50B616600C41939 /* vsco-organ.sf2 */ = {isa = PBXFileReference; path = "vsco-organ.sf2"; sourceTree = "<group>"; };
 		491EBB6D5C534DF869AA2AC6 /* TunerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunerEngine.swift; sourceTree = "<group>"; };
+		4AB5FD041BDC4F596B33DEA1 /* SyncState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncState.swift; sourceTree = "<group>"; };
+		4BC414EB028768B79584581F /* Pancham.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Pancham.xcconfig; sourceTree = "<group>"; };
 		4FDDBD5B8DE1D48141FCD5DD /* SwaraParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwaraParser.swift; sourceTree = "<group>"; };
+		503FFDE9887F1D1D90F2A92B /* SyncEngine+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SyncEngine+Actions.swift"; sourceTree = "<group>"; };
 		520E55DD8E2A47FB1684C497 /* NotationGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotationGridView.swift; sourceTree = "<group>"; };
 		5589A9D734A057EAAF4D63B5 /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = Pancham/Resources/Fonts; sourceTree = SOURCE_ROOT; };
 		56BBCA391BB26CF3A46761DB /* Theka.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theka.swift; sourceTree = "<group>"; };
@@ -66,20 +92,38 @@
 		64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwaraView.swift; sourceTree = "<group>"; };
 		6DB497E899D624CDFB8E1AAF /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		7ADC0513DB717581EB37954B /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
-		83587F3407B45EF8C728AE9C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		91AC2363B881B80866FB0998 /* UserPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPickerView.swift; sourceTree = "<group>"; };
+		7BD2659571A286633F9D6307 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		8592AB2564FB61F28FC3014B /* LibraryWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryWorkspace.swift; sourceTree = "<group>"; };
 		9F3A4F5F934B314C7F2A25E9 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		A461BBD27B99C7A054D22B2F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A8C55FF8295E7B84C55136E2 /* Composition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Composition.swift; sourceTree = "<group>"; };
 		B2786191EF2DC01CAD2BAF0B /* vsco-strings.sf2 */ = {isa = PBXFileReference; path = "vsco-strings.sf2"; sourceTree = "<group>"; };
+		B88263098E4C8DA709190A58 /* PanchamTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PanchamTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0C4F279E65FC50CB1F3033E /* Pancham.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pancham.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D7CB7CD712C5CD7DFF4890EF /* WorkspaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceTests.swift; sourceTree = "<group>"; };
 		D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaHeaderView.swift; sourceTree = "<group>"; };
 		DAFB46DA9CB1641F3498029F /* tabla.sf2 */ = {isa = PBXFileReference; path = tabla.sf2; sourceTree = "<group>"; };
+		DEB4537B9E3ECAD1F70859E8 /* ServerConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfig.swift; sourceTree = "<group>"; };
+		E0FC8A0D2D47F3AE59ACA4CB /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		EAB0BFF3DA6BC60E3A5F4F0D /* Taal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taal.swift; sourceTree = "<group>"; };
 		EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceEditorView.swift; sourceTree = "<group>"; };
+		F26A18DEB9EFD85782FAB441 /* SyncIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncIntegrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		03531FFBFA794F72D640F653 /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				2C677E1B8B9109EF84D53F9E /* AuthSession.swift */,
+				0A7485A7EEE217AAF2D64E56 /* PanchamAPI.swift */,
+				DEB4537B9E3ECAD1F70859E8 /* ServerConfig.swift */,
+				7BD2659571A286633F9D6307 /* SyncEngine.swift */,
+				503FFDE9887F1D1D90F2A92B /* SyncEngine+Actions.swift */,
+				4AB5FD041BDC4F596B33DEA1 /* SyncState.swift */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
 		20A95123B62A29210504C995 /* Document */ = {
 			isa = PBXGroup;
 			children = (
@@ -93,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				D0C4F279E65FC50CB1F3033E /* Pancham.app */,
+				B88263098E4C8DA709190A58 /* PanchamTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,6 +170,15 @@
 			path = DSL;
 			sourceTree = "<group>";
 		};
+		7962497E87BDE8B0808834F4 /* PanchamTests */ = {
+			isa = PBXGroup;
+			children = (
+				F26A18DEB9EFD85782FAB441 /* SyncIntegrationTests.swift */,
+				D7CB7CD712C5CD7DFF4890EF /* WorkspaceTests.swift */,
+			);
+			path = PanchamTests;
+			sourceTree = "<group>";
+		};
 		820F9DDFFD798178215192B3 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
@@ -140,20 +194,20 @@
 			children = (
 				18986CFD0E0C620BB1A95A86 /* CellView.swift */,
 				9F3A4F5F934B314C7F2A25E9 /* EditorView.swift */,
+				26170F64CB3E9181DAB4519C /* HistorySheets.swift */,
 				2D629A5E0C5E00ED0ED251C8 /* LegendView.swift */,
 				31D4272FBF93C7341E4E0D04 /* LibrarySidebar.swift */,
+				E0FC8A0D2D47F3AE59ACA4CB /* LoginView.swift */,
 				D9028E03A09114CBEBB875C2 /* MetaHeaderView.swift */,
 				520E55DD8E2A47FB1684C497 /* NotationGridView.swift */,
 				21C1D3904E05B5497CCEEF32 /* NotesView.swift */,
 				3086601BA8121576F9CAB43A /* NowPlayingView.swift */,
-				83587F3407B45EF8C728AE9C /* OnboardingView.swift */,
 				19E100E422285CF28DFC5160 /* PanchamLogo.swift */,
 				EBA2C2914F90A856F4429877 /* PerformanceEditorView.swift */,
 				0EA7203A312C5EA5150CBEFF /* RootView.swift */,
 				1D47E328242951C82246D193 /* SectionView.swift */,
 				64B8A9D06674EFCA64CBF9C4 /* SwaraView.swift */,
 				1C6E61F348F6469692CBA441 /* TanpuraView.swift */,
-				91AC2363B881B80866FB0998 /* UserPickerView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -162,16 +216,27 @@
 			isa = PBXGroup;
 			children = (
 				7ADC0513DB717581EB37954B /* Library.swift */,
+				8592AB2564FB61F28FC3014B /* LibraryWorkspace.swift */,
 				0361C25F57AA062E3D16EECD /* PanchamApp.swift */,
 				6DB497E899D624CDFB8E1AAF /* Preferences.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
 		};
+		AEAA802E7F306B9974BE3AB9 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				4BC414EB028768B79584581F /* Pancham.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		B2EDFAC970A1B3146A8E3E92 = {
 			isa = PBXGroup;
 			children = (
+				AEAA802E7F306B9974BE3AB9 /* Config */,
 				E1C2ECED0E0C4EAD08C5E9C9 /* Pancham */,
+				7962497E87BDE8B0808834F4 /* PanchamTests */,
 				53ABB9D6CB0D6EB114881E56 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -195,6 +260,7 @@
 				20A95123B62A29210504C995 /* Document */,
 				650A1083C5CEFF061B76ADD0 /* DSL */,
 				5812455AC8ED65BC286037EF /* Resources */,
+				03531FFBFA794F72D640F653 /* Sync */,
 				D5732600CFEB6914261877B8 /* Theme */,
 				9069827BAA554741E0BB1836 /* Views */,
 			);
@@ -204,6 +270,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		5413866FEB610C9668835696 /* PanchamTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 28D711EB8C9895191F98E041 /* Build configuration list for PBXNativeTarget "PanchamTests" */;
+			buildPhases = (
+				C9F8CA365F46231DC6587122 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PanchamTests;
+			packageProductDependencies = (
+			);
+			productName = PanchamTests;
+			productReference = B88263098E4C8DA709190A58 /* PanchamTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		96B41B23FBCAB715D4E04CCD /* Pancham */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1E0109F51BE77635AF0E0528 /* Build configuration list for PBXNativeTarget "Pancham" */;
@@ -231,6 +314,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					5413866FEB610C9668835696 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
 					96B41B23FBCAB715D4E04CCD = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -251,6 +338,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				5413866FEB610C9668835696 /* PanchamTests */,
 				96B41B23FBCAB715D4E04CCD /* Pancham */,
 			);
 		};
@@ -277,17 +365,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B7D6F4CF2CFBFBCEF717286F /* AuthSession.swift in Sources */,
 				2276D97813C106F293ECB9F5 /* CellView.swift in Sources */,
 				1DC8BFB9B3722124E19FA3EA /* Composition.swift in Sources */,
 				E972F44D7454DCF83365B2AF /* EditorView.swift in Sources */,
+				6EB26B0A3670E3B33D1AE496 /* HistorySheets.swift in Sources */,
 				ADAB9E35D5247B5B4342D22D /* LegendView.swift in Sources */,
 				824E8DA6D206BAB0BE9B6BF2 /* Library.swift in Sources */,
 				5CEBC7609E07DE393888D1B0 /* LibrarySidebar.swift in Sources */,
+				6CF47AB9BBBD1C50BFD1E3CD /* LibraryWorkspace.swift in Sources */,
+				DA2BFC6C65D9384CE60E23A4 /* LoginView.swift in Sources */,
 				97B33B568A33A8ABE78F44AD /* MetaHeaderView.swift in Sources */,
 				37770072709F7ABA49DE4446 /* NotationGridView.swift in Sources */,
 				113F435C45DBCB7BEFB8AEAE /* NotesView.swift in Sources */,
 				7DC5E83A534CAAC5823D445A /* NowPlayingView.swift in Sources */,
-				CA441298DE1D36A385944FE3 /* OnboardingView.swift in Sources */,
+				AC0E160211C51E2B583F572D /* PanchamAPI.swift in Sources */,
 				0C8D26F0E64FA0A1C6E89DFC /* PanchamApp.swift in Sources */,
 				E07A5788392DB67DF4C32514 /* PanchamLogo.swift in Sources */,
 				00E03BEC48A950A3E2E9DA0A /* PerformanceEditorView.swift in Sources */,
@@ -295,22 +387,66 @@
 				ECB20A3EE2A5628B7C760050 /* Preferences.swift in Sources */,
 				C6B965966DF247B822E6B0AF /* RootView.swift in Sources */,
 				49A1690ED7F8288A6FC9763D /* SectionView.swift in Sources */,
+				2E4E4436140F3FB76FA69C13 /* ServerConfig.swift in Sources */,
 				B6CC6314BE0CBB6BCF46B0F3 /* SwaraParser.swift in Sources */,
 				1603CF1F3E61D85D5B611892 /* SwaraView.swift in Sources */,
+				5E4D497C84EF06112374E350 /* SyncEngine+Actions.swift in Sources */,
+				29118E823E1EF5A82F883F98 /* SyncEngine.swift in Sources */,
+				59AFD25D893414B50AAE4A2E /* SyncState.swift in Sources */,
 				AA60B142A7D78EC47BFA6D00 /* Taal.swift in Sources */,
 				5E974C7ADD58B0073933010B /* TanpuraView.swift in Sources */,
 				22BEA206CB76D93A884C3B9A /* Theka.swift in Sources */,
 				D1B2B80495445E09BC6F4FE0 /* Theme.swift in Sources */,
 				32008B14F2B4FBA887D72215 /* TunerEngine.swift in Sources */,
-				137F28BC6BDEF18EB2670A13 /* UserPickerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C9F8CA365F46231DC6587122 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4E0E72583AED0F2B672D1E61 /* AuthSession.swift in Sources */,
+				977A81F118D1E4F1ACAC8064 /* Composition.swift in Sources */,
+				5DCC02B8CC3CBD955CA21C7A /* Library.swift in Sources */,
+				DC949112DBD1A83FC8FEC6EE /* LibraryWorkspace.swift in Sources */,
+				AD298FDB41420BDFAA40A29E /* PanchamAPI.swift in Sources */,
+				7DA7B57CF6F936D0C5C603D1 /* Preferences.swift in Sources */,
+				FF8A33D681DB1D5D0FD9F496 /* ServerConfig.swift in Sources */,
+				041BDD929ED916FB493D0E0B /* SyncEngine+Actions.swift in Sources */,
+				8210F9F70EE31D0A90834DBA /* SyncEngine.swift in Sources */,
+				8011EF76228266A42D91AC9D /* SyncIntegrationTests.swift in Sources */,
+				507E178ECFE2FE827DE0D47D /* SyncState.swift in Sources */,
+				FB8006DA796F20F4A58109A6 /* Taal.swift in Sources */,
+				C69596D7C23D8A590D3EA192 /* WorkspaceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		16E14C5C333E00C1A098E90F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.harshagrawal.pancham.tests;
+				PRODUCT_MODULE_NAME = PanchamTests;
+				PRODUCT_NAME = PanchamTests;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
 		4FEE7750857BC37896412C22 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4BC414EB028768B79584581F /* Pancham.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -413,6 +549,7 @@
 		};
 		D22E90D4A92848FEEE446F24 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4BC414EB028768B79584581F /* Pancham.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -476,6 +613,26 @@
 			};
 			name = Release;
 		};
+		FF8939627E6DCAE6795A8A9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.harshagrawal.pancham.tests;
+				PRODUCT_MODULE_NAME = PanchamTests;
+				PRODUCT_NAME = PanchamTests;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -484,6 +641,15 @@
 			buildConfigurations = (
 				87C7A7BD4A529EEEB67C63A4 /* Debug */,
 				9541C9E4ADAE37A9D6E988B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		28D711EB8C9895191F98E041 /* Build configuration list for PBXNativeTarget "PanchamTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16E14C5C333E00C1A098E90F /* Debug */,
+				FF8939627E6DCAE6795A8A9A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

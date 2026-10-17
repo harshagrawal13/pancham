@@ -19,13 +19,23 @@ struct LibraryFile: Identifiable, Hashable {
     var laya: String
 }
 
-@Observable
+struct RenameTarget: Identifiable {
+    let url: URL
+    let originalName: String
+    let isFolder: Bool
+    var id: URL { url }
+}
+
+@MainActor @Observable
 final class Library {
     var folders: [LibraryFolder] = []
     var looseFiles: [LibraryFile] = []  // files directly under base folder
     var totalCount: Int = 0
 
     let root: URL
+    /// Told about renames and deletes made through the app, so sync can keep a notation's identity
+    /// (and history) across a rename and send deletes to the server.
+    var onEvent: (@MainActor (LibraryEvent) -> Void)?
 
     init(root: URL) {
         self.root = root
@@ -196,6 +206,7 @@ final class Library {
         }
         do {
             try fm.moveItem(at: url, to: final)
+            onEvent?(.renamed(from: url, to: final))
             reload()
             return final
         } catch {
@@ -203,19 +214,17 @@ final class Library {
         }
     }
 
-    /// Move a file or folder to the Trash.
+    /// Move a file or folder to the Trash. (On the server this is a revision too, so it can be undone
+    /// from "Recently deleted".)
     func delete(_ url: URL) {
+        onEvent?(.willDelete(url))          // sync reads any unsynced edits before the file leaves
         var resulting: NSURL?
         try? FileManager.default.trashItem(at: url, resultingItemURL: &resulting)
+        if !FileManager.default.fileExists(atPath: url.path) { onEvent?(.deleted(url)) }
         reload()
     }
 
-    private func sanitize(_ s: String) -> String {
-        let trimmed = s.trimmingCharacters(in: .whitespaces)
-        let banned = CharacterSet(charactersIn: "/\\:?%*|\"<>")
-        let cleaned = String(String.UnicodeScalarView(trimmed.unicodeScalars.filter { !banned.contains($0) }))
-        return cleaned.isEmpty ? "Untitled" : cleaned
-    }
+    private func sanitize(_ s: String) -> String { sanitizeFileName(s) }
 }
 
 // Read/write for a single composition at a URL.

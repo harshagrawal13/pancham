@@ -1,30 +1,19 @@
 import SwiftUI
 
-enum RootRoute {
-    case picker
-    case onboarding   // add-new-user flow
-    case editor
-}
-
-/// Top-level router.
-///   - no saved users    → onboarding (first user)
-///   - saved, no active  → user picker
-///   - active user       → library + editor
+/// Top-level router: signed out → email-code sign-in, signed in → library + editor.
+/// A stored session counts as signed in even with no network, so the app opens straight onto
+/// the local copy of your notations.
 struct RootView: View {
     @Bindable var prefs: Preferences
-    @State private var explicitRoute: RootRoute? = nil
+    let session: AuthSession
 
     var body: some View {
         Group {
-            if prefs.isSignedIn, let folder = prefs.activeFolder, let user = prefs.activeUser {
-                LibraryEditor(prefs: prefs, root: folder, user: user)
-                    .id(user.id)
-            } else if explicitRoute == .onboarding || !prefs.hasAnyUsers {
-                OnboardingView(prefs: prefs, onComplete: {
-                    explicitRoute = nil
-                }, onCancel: prefs.hasAnyUsers ? { explicitRoute = nil } : nil)
+            if let account = session.account {
+                LibraryEditor(prefs: prefs, session: session, account: account)
+                    .id(account.id)
             } else {
-                UserPickerView(prefs: prefs, onAddNew: { explicitRoute = .onboarding })
+                LoginView(session: session)
             }
         }
         .frame(minWidth: 1100, minHeight: 760)
@@ -35,73 +24,84 @@ struct RootView: View {
     }
 }
 
+private struct SheetURL: Identifiable {
+    let url: URL
+    var id: URL { url }
+}
+
+/// "New notation" / "New folder", and where: one value, so the sheet always shows what it will do.
+private struct CreateRequest: Identifiable {
+    enum Kind { case notation, folder }
+    let id = UUID()
+    let kind: Kind
+    let library: Library
+    /// For a notation: the folder it goes in (nil: the top level).
+    var folder: LibraryFolder? = nil
+}
+
 struct LibraryEditor: View {
     @Bindable var prefs: Preferences
-    let root: URL
-    let user: PanchamUser
-
-    @State private var library: Library
-    @State private var selectedURL: URL?
-    /// Which URL is currently reflected in `composition`. Saves only run when
-    /// this matches `selectedURL`, so a mid-switch `composition` change can't
-    /// write stale content to the new file.
-    @State private var loadedURL: URL?
-    @State private var composition: Composition = Composition()
+    /// Libraries, sync, the open notation and its autosave (App/LibraryWorkspace.swift).
+    @State private var ws: LibraryWorkspace
+    // What only this view cares about:
     @State private var isRenderMode: Bool = false
     @State private var playback = PlaybackEngine()
-    @State private var creatingFile: Bool = false
-    @State private var newFileName: String = ""
-    @State private var newFileTargetFolder: LibraryFolder? = nil
+    @State private var createRequest: CreateRequest?
     @State private var renameTarget: RenameTarget?
-    @State private var newFolderSheet: Bool = false
-    @State private var folderName: String = ""
-    @State private var saveTask: Task<Void, Never>? = nil
     @State private var showNowPlaying: Bool = false
     @State private var tuner = TunerEngine()
     @State private var showTanpura: Bool = false
+    @State private var historyTarget: SheetURL?
+    @State private var showDeleted = false
 
-    init(prefs: Preferences, root: URL, user: PanchamUser) {
+    init(prefs: Preferences, session: AuthSession, account: Account) {
         _prefs = Bindable(prefs)
-        self.root = root
-        self.user = user
-        _library = State(initialValue: Library(root: root))
+        _ws = State(initialValue: LibraryWorkspace(session: session, account: account))
     }
 
     var body: some View {
+        let selection = Binding(get: { ws.selectedURL }, set: { ws.selectedURL = $0 })
         HStack(spacing: 0) {
             LibrarySidebar(
-                library: library,
-                username: user.name,
-                selectedURL: $selectedURL,
-                onNewFile: {
-                    newFileTargetFolder = nil
-                    creatingFile = true
-                },
-                onNewFolder: { newFolderSheet = true },
-                onNewFileIn: { folder in
-                    newFileTargetFolder = folder
-                    creatingFile = true
+                library: ws.library,
+                global: ws.global,
+                account: ws.account,
+                engine: ws.engine,
+                selectedURL: selection,
+                onNewFile: { lib in createRequest = CreateRequest(kind: .notation, library: lib) },
+                onNewFolder: { lib in createRequest = CreateRequest(kind: .folder, library: lib) },
+                onNewFileIn: { lib, folder in
+                    createRequest = CreateRequest(kind: .notation, library: lib, folder: folder)
                 },
                 onRename: { target in renameTarget = target },
-                onDelete: { url in deleteURL(url) },
-                onSwitchUser: { prefs.deactivate() }
+                onDelete: ws.delete,
+                onAddToLibrary: ws.addToLibrary,
+                onPublish: ws.publish,
+                onRecentlyDeleted: { showDeleted = true },
+                onSignOut: { Task { await ws.engine.session.signOut() } }
             )
             EditorPane(
-                selectedURL: $selectedURL,
-                composition: composition,
+                selectedURL: selection,
+                composition: ws.composition,
                 isRenderMode: $isRenderMode,
-                library: library,
+                library: ws.library,
                 playback: playback,
-                onNewFile: { creatingFile = true },
+                readOnly: ws.isReadOnly,
+                isGlobal: ws.selectedURL.map(ws.isGlobal) ?? false,
+                engine: ws.engine,
+                notice: ws.notice,
+                onNewFile: { createRequest = CreateRequest(kind: .notation, library: ws.library) },
                 onPerform: { showNowPlaying = true },
-                onTanpura: { showTanpura = true }
+                onTanpura: { showTanpura = true },
+                onHistory: { if let url = ws.selectedURL { historyTarget = SheetURL(url: url) } },
+                onAddToLibrary: { if let url = ws.selectedURL { ws.addToLibrary(url) } }
             )
         }
         .background(Theme.canvas)
         .overlay {
             if showNowPlaying {
                 NowPlayingView(
-                    composition: composition,
+                    composition: ws.composition,
                     playback: playback,
                     onClose: { showNowPlaying = false }
                 )
@@ -118,153 +118,90 @@ struct LibraryEditor: View {
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.86), value: showNowPlaying)
         .animation(.spring(response: 0.45, dampingFraction: 0.86), value: showTanpura)
-        .onChange(of: selectedURL) { _, newURL in
+        .onChange(of: ws.selectedURL) { _, _ in
             playback.stop()
             showNowPlaying = false
-            loadSelected(newURL)
+            ws.loadSelected()
+        }
+        .onChange(of: ws.engine.fileChanges) { _, changes in ws.filesChangedBySync(changes.urls) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            ws.engine.kick(after: 0.2)
         }
         .onAppear {
-            openPendingIfNeeded()
-            if selectedURL == nil {
-                selectedURL = library.looseFiles.first?.url
-                    ?? library.folders.flatMap(\.files).first?.url
+            ws.start()
+            ws.openPending(from: prefs)
+        }
+        .onDisappear { ws.stop() }
+        .onChange(of: prefs.pendingOpenURL) { _, _ in ws.openPending(from: prefs) }
+        .sheet(item: $createRequest) { request in
+            if request.kind == .folder {
+                NameSheet(
+                    eyebrow: "New folder",
+                    title: "Name this folder",
+                    subtitle: "Folders live inside your library. Use them to group bandishes by raga, laya, or style.",
+                    placeholder: "Yaman",
+                    initial: "",
+                    confirmLabel: "Create",
+                    onConfirm: { value in
+                        _ = request.library.createFolder(named: value)
+                        createRequest = nil
+                    },
+                    onCancel: { createRequest = nil }
+                )
+            } else {
+                let inGlobal = request.library === ws.global
+                NameSheet(
+                    eyebrow: request.folder.map { "New notation · \($0.name)" }
+                        ?? (inGlobal ? "New global notation" : "New notation"),
+                    title: "Name this bandish",
+                    subtitle: request.folder.map { "This bandish will live inside \($0.name). You can rename it later." }
+                        ?? (inGlobal ? "Everyone signed in will be able to read it. Only admins can change it."
+                                     : "Choose a name for your new composition. You can rename it later."),
+                    placeholder: "यमन — विलम्बित",
+                    initial: "",
+                    confirmLabel: "Create",
+                    onConfirm: { value in
+                        if let url = request.library.createFile(named: value, in: request.folder) {
+                            ws.selectedURL = url
+                            ws.engine.kick()
+                        }
+                        createRequest = nil
+                    },
+                    onCancel: { createRequest = nil }
+                )
             }
-            loadSelected(selectedURL)
-        }
-        .onChange(of: prefs.pendingOpenURL) { _, _ in openPendingIfNeeded() }
-        .sheet(isPresented: $creatingFile) {
-            NameSheet(
-                eyebrow: newFileTargetFolder.map { "New notation · \($0.name)" } ?? "New notation",
-                title: "Name this bandish",
-                subtitle: newFileTargetFolder == nil
-                    ? "Choose a name for your new composition. You can rename it later."
-                    : "This bandish will live inside \(newFileTargetFolder!.name). You can rename it later.",
-                placeholder: "यमन — विलम्बित",
-                initial: "",
-                confirmLabel: "Create",
-                onConfirm: { value in
-                    if let url = library.createFile(named: value, in: newFileTargetFolder) { selectedURL = url }
-                    creatingFile = false
-                    newFileTargetFolder = nil
-                },
-                onCancel: {
-                    creatingFile = false
-                    newFileTargetFolder = nil
-                }
-            )
-        }
-        .sheet(isPresented: $newFolderSheet) {
-            NameSheet(
-                eyebrow: "New folder",
-                title: "Name this folder",
-                subtitle: "Folders live inside your library. Use them to group bandishes by raga, laya, or style.",
-                placeholder: "Yaman",
-                initial: "",
-                confirmLabel: "Create",
-                onConfirm: { value in
-                    _ = library.createFolder(named: value)
-                    newFolderSheet = false
-                },
-                onCancel: { newFolderSheet = false }
-            )
         }
         .sheet(item: $renameTarget) { target in
             NameSheet(
                 eyebrow: target.isFolder ? "Rename folder" : "Rename notation",
                 title: target.isFolder ? "Rename this folder" : "Rename this bandish",
                 subtitle: target.isFolder
-                    ? "The folder on disk will be renamed. Files inside keep their names."
-                    : "The file on disk will be renamed.",
+                    ? "Files inside keep their names."
+                    : "Its history stays with it.",
                 placeholder: target.originalName,
                 initial: target.originalName,
                 confirmLabel: "Rename",
                 onConfirm: { value in
-                    if let newURL = library.rename(target.url, to: value) {
-                        if selectedURL == target.url { selectedURL = newURL }
-                    }
+                    ws.rename(target, to: value)
                     renameTarget = nil
                 },
                 onCancel: { renameTarget = nil }
             )
         }
-    }
-
-    /// Import + select a `.pancham` file opened from Finder, if one is waiting.
-    private func openPendingIfNeeded() {
-        guard let url = prefs.pendingOpenURL else { return }
-        prefs.pendingOpenURL = nil
-        if let dest = library.importFile(url) {
-            selectedURL = dest
+        .sheet(item: $historyTarget) { target in
+            HistoryView(url: target.url, engine: ws.engine, canRestore: !ws.isReadOnly) { historyTarget = nil }
         }
-    }
-
-    private func loadSelected(_ url: URL?) {
-        saveTask?.cancel()
-        guard let url else {
-            composition = Composition()
-            loadedURL = nil
-            return
-        }
-        if loadedURL == url { return }
-        Task.detached(priority: .userInitiated) {
-            let loaded = CompositionStore.load(from: url)
-            await MainActor.run {
-                guard selectedURL == url else { return }
-                composition = loaded
-                loadedURL = url
-                installAutoSave()
+        .sheet(isPresented: $showDeleted) {
+            RecentlyDeletedView(engine: ws.engine) {
+                showDeleted = false
+                ws.library.reload()
             }
         }
-    }
-
-    /// Subscribe to the composition's observable tree. Tracking is one-shot,
-    /// so we re-install only after the debounce save fires — keystrokes during
-    /// the save window do no observation work, since the first keystroke
-    /// already consumed the subscription.
-    private func installAutoSave() {
-        let comp = composition
-        withObservationTracking {
-            // Touch every observable field once to subscribe.
-            _ = comp.title; _ = comp.raga; _ = comp.taal; _ = comp.form; _ = comp.samOffset
-            _ = comp.laya; _ = comp.bpm; _ = comp.notes; _ = comp.performance
-            for s in comp.sections {
-                _ = s.name
-                for l in s.lines {
-                    _ = l.type
-                    _ = l.label
-                    for box in l.cells { _ = box.text }
-                }
-            }
-        } onChange: { [weak comp] in
-            Task { @MainActor [weak comp] in
-                guard let comp, comp === self.composition else { return }
-                self.scheduleSave()
-            }
+        .sheet(isPresented: Binding(get: { !ws.legacyLibraries.isEmpty }, set: { _ in })) {
+            LegacyImportSheet(libraries: ws.legacyLibraries, onImport: ws.importLegacy, onSkip: ws.skipLegacy)
         }
     }
 
-    private func scheduleSave() {
-        guard let url = selectedURL, url == loadedURL else { return }
-        let comp = composition
-        saveTask?.cancel()
-        saveTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            if Task.isCancelled { return }
-            await Task.detached(priority: .utility) {
-                try? CompositionStore.save(comp, to: url)
-            }.value
-            // Re-arm tracking only after the save completes. Coalesces the
-            // re-subscribe (which walks every cell) to once per debounce
-            // window instead of once per keystroke.
-            guard !Task.isCancelled, comp === self.composition else { return }
-            self.installAutoSave()
-        }
-    }
-
-    private func deleteURL(_ url: URL) {
-        if selectedURL == url { selectedURL = nil }
-        library.delete(url)
-    }
 }
 
 // MARK: - EditorPane
@@ -275,9 +212,16 @@ struct EditorPane: View {
     @Binding var isRenderMode: Bool
     let library: Library
     @Bindable var playback: PlaybackEngine
+    /// A global notation you may read but not change: always rendered, with no editing controls.
+    let readOnly: Bool
+    let isGlobal: Bool
+    let engine: SyncEngine
+    let notice: String?
     let onNewFile: () -> Void
     let onPerform: () -> Void
     let onTanpura: () -> Void
+    let onHistory: () -> Void
+    let onAddToLibrary: () -> Void
 
     @State private var showPerformance = false
 
@@ -288,7 +232,7 @@ struct EditorPane: View {
                 emptyState
             } else {
                 ScrollView {
-                    EditorView(composition: composition, isRenderMode: isRenderMode)
+                    EditorView(composition: composition, isRenderMode: isRenderMode || readOnly)
                         .padding(.horizontal, 32)
                         .padding(.vertical, 28)
                         .frame(maxWidth: .infinity)
@@ -345,9 +289,16 @@ struct EditorPane: View {
             .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(fg.opacity(0.4), lineWidth: 1))
     }
 
+    /// Quiet when all is well: the sidebar footer says "Synced". Worth a word here only when it isn't.
+    private var toolbarStatus: String? {
+        if let notice { return notice }
+        if readOnly { return "Global · read only" }
+        return engine.toolbarText
+    }
+
     private var toolbar: some View {
-        HStack(alignment: .center, spacing: 14) {
-            HStack(alignment: .lastTextBaseline, spacing: 14) {
+        HStack(alignment: .center, spacing: 10) {
+            HStack(alignment: .lastTextBaseline, spacing: 12) {
                 Text("Pancham")
                     .font(Theme.display(22, weight: .medium))
                     .foregroundStyle(Theme.ink)
@@ -357,23 +308,36 @@ struct EditorPane: View {
                     .tracking(0.5)
                 buildBadge
             }
-            Spacer()
+            .lineLimit(1)
+            .fixedSize()
+            .layoutPriority(2)
+            Spacer(minLength: 8)
             if selectedURL != nil {
                 playbackControls
-                Text("· Saved")
-                    .font(Theme.ui(11)).tracking(0.6)
-                    .textCase(.uppercase)
-                    .foregroundStyle(Theme.muted)
-                    .padding(.trailing, 4)
-                if composition.form.isStructured {
+                if let status = toolbarStatus {
+                    Text(status)
+                        .font(Theme.ui(11)).tracking(0.6)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Theme.muted)
+                        .lineLimit(1)
+                }
+                if readOnly {
+                    Button("Add to my library", action: onAddToLibrary)
+                        .buttonStyle(ToolbarOutlineButton())
+                }
+                Button("History", action: onHistory)
+                    .buttonStyle(ToolbarOutlineButton())
+                if composition.form.isStructured && !readOnly {
                     Button("Performance") { showPerformance = true }
                         .buttonStyle(ToolbarOutlineButton())
                 }
-                Button("+ Section") { composition.sections.append(CompositionSection(matras: composition.matras)) }
-                    .buttonStyle(ToolbarOutlineButton())
-                Button(isRenderMode ? "Edit" : "Render") { isRenderMode.toggle() }
-                    .buttonStyle(ToolbarOutlineButton())
-                    .keyboardShortcut("r", modifiers: [.command])
+                if !readOnly {
+                    Button("+ Section") { composition.sections.append(CompositionSection(matras: composition.matras)) }
+                        .buttonStyle(ToolbarOutlineButton())
+                    Button(isRenderMode ? "Edit" : "Render") { isRenderMode.toggle() }
+                        .buttonStyle(ToolbarOutlineButton())
+                        .keyboardShortcut("r", modifiers: [.command])
+                }
             }
             // Riyaz tool — available whether or not a notation is open.
             Button(action: onTanpura) {
@@ -388,7 +352,7 @@ struct EditorPane: View {
                 .buttonStyle(ToolbarPrimaryButton())
                 .keyboardShortcut("n", modifiers: [.command])
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 24)
         .padding(.vertical, 14)
         .background(Theme.paper)
         .overlay(alignment: .bottom) {
@@ -442,8 +406,10 @@ struct ToolbarOutlineButton: ButtonStyle {
         configuration.label
             .font(Theme.ui(12))
             .tracking(0.2)
+            .lineLimit(1)
+            .fixedSize()
             .foregroundStyle(Theme.ink)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .overlay(Rectangle().strokeBorder(Theme.ruleFaint, lineWidth: 1))
             .opacity(configuration.isPressed ? 0.6 : 1)
@@ -455,11 +421,25 @@ struct ToolbarPrimaryButton: ButtonStyle {
         configuration.label
             .font(Theme.ui(12, weight: .medium))
             .tracking(0.2)
+            .lineLimit(1)
+            .fixedSize()
             .foregroundStyle(Theme.paper)
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Theme.ink)
             .opacity(configuration.isPressed ? 0.85 : 1)
+    }
+}
+
+struct OutlineButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(Theme.ui(11, weight: .medium))
+            .tracking(1.5).textCase(.uppercase)
+            .foregroundStyle(Theme.ink)
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .overlay(Rectangle().strokeBorder(Theme.ink, lineWidth: 1))
+            .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
 
@@ -475,13 +455,6 @@ struct FilledButtonStyle: ButtonStyle {
             .background(Theme.ink)
             .opacity(configuration.isPressed ? 0.85 : 1)
     }
-}
-
-struct RenameTarget: Identifiable {
-    let url: URL
-    let originalName: String
-    let isFolder: Bool
-    var id: URL { url }
 }
 
 /// Reusable sheet for name / rename / new-folder prompts. Matches the dialog
