@@ -15,8 +15,11 @@ func sanitizeFileName(_ s: String) -> String {
     let trimmed = s.trimmingCharacters(in: .whitespaces)
     let banned = CharacterSet(charactersIn: "/\\:?%*|\"<>")
     let cleaned = String(String.UnicodeScalarView(trimmed.unicodeScalars.filter { !banned.contains($0) }))
+    // Filenames are limited to 255 bytes (Devanagari is 3 bytes a character); leave room for " 2.pancham".
+    var short = cleaned
+    while short.utf8.count > 200 { short.removeLast() }
     // "." and ".." survive the character filter but would walk out of the cache folder.
-    return cleaned.isEmpty || cleaned.allSatisfy({ $0 == "." }) ? "Untitled" : cleaned
+    return short.isEmpty || short.allSatisfy({ $0 == "." }) ? "Untitled" : short
 }
 
 /// Keeps the local cache and the server in step, without ever losing an edit.
@@ -191,6 +194,15 @@ final class SyncEngine {
         } while rerun && status != .offline && passes < 5
     }
 
+    /// Take the same single-flight slot a sync pass uses, for an action that writes to the server itself
+    /// (restore, undelete): a pass in the middle would see a half-applied state.
+    func beginExclusive() async {
+        while running { try? await Task.sleep(for: .milliseconds(40)) }
+        running = true
+    }
+
+    func endExclusive() { running = false }
+
     /// Wait out any pass already running, then run a full one.
     func syncAndWait() async {
         while running { try? await Task.sleep(for: .milliseconds(40)) }
@@ -261,7 +273,11 @@ final class SyncEngine {
                 case .retryLater:
                     problems["delete \(p.docID)"] = "“\(p.name)” couldn't be deleted: \(error.localizedDescription)"
                     continue                                   // keep it queued; the rest carry on
-                case .permanent: break                         // gone, not ours, or refused for good
+                case .permanent:
+                    if case .conflict = error {                // changed under us twice running: try again next pass
+                        problems["delete \(p.docID)"] = "“\(p.name)” couldn't be deleted yet: it keeps changing elsewhere"
+                        continue
+                    }                                          // otherwise gone, not ours, or refused for good
                 }
             }
             state.pendingDeletes.removeAll { $0 == p }
@@ -317,7 +333,7 @@ final class SyncEngine {
             // The server has no such notation (a different server, or a database restored from earlier):
             // this file becomes a new notation, with a new id.
             state.entries[key] = nil
-            register(newFile: url, scope: e.scope, forkedFrom: nil, note: "re-created: the server had no record of it")
+            register(newFile: url, scope: e.scope, forkedFrom: e.forkedFrom, note: "re-created: the server had no record of it")
         } catch RemoteError.rejected(_, let message) {
             refuse(key, failedKey, "“\(name)” couldn't be synced: \(message)")
         } catch RemoteError.forbidden(let message) {
@@ -341,7 +357,11 @@ final class SyncEngine {
     /// newer edit on top of it. Otherwise both versions are kept.
     private func resolveConflict(_ key: String, data: Data, hash: String, name: String, folder: String,
                                  mayRebase: Bool) async throws {
-        guard let e = state.entries[key], let head = try await api.head(of: e.docID) else { return }
+        guard let e = state.entries[key] else { return }
+        guard let head = try await api.head(of: e.docID) else {
+            refuse(key, "unreachable", "“\(name)” can't be synced: the server won't show its current version")
+            return
+        }
         if let theirs = head.content, !head.deleted, head.name == name, head.folder == folder, Self.sameJSON(theirs, data) {
             state.entries[key]?.markSynced(rev: head.rev, hash: hash)
             persist()

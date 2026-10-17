@@ -21,6 +21,7 @@ extension SyncEngine {
         else { throw RemoteError.notFound }
         let content = try await api.content(of: docID, rev: rev)
         await syncAndWait()                       // push edits first, so they stay in the history
+        await beginExclusive(); defer { endExclusive() }       // no sync pass between here and the end
         flushEdits?()
         guard let rel = storage.relative(url),
               let (key, e) = state.entries.first(where: { $0.value.path == rel }), e.rev > 0 else { throw RemoteError.notFound }
@@ -45,8 +46,11 @@ extension SyncEngine {
     }
 
     func undelete(_ doc: RemoteDoc) async throws {
+        await beginExclusive()
+        defer { endExclusive() }
         try await api.save(id: doc.id, base: doc.rev, name: doc.name, folder: doc.folder, deleted: false,
                            scope: doc.scope, note: "restored after delete")
+        endExclusive()
         await syncAndWait()
     }
 

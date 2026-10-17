@@ -132,6 +132,7 @@ final class LibraryWorkspace {
         if !FileManager.default.fileExists(atPath: selected.path) {
             selectedURL = nil
         } else if urls.contains(selected) {
+            flushEdits()                  // before forgetting which file is loaded, or the guard drops it
             loadedURL = nil
             loadSelected()
         }

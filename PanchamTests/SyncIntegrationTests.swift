@@ -551,6 +551,8 @@ final class SyncIntegrationTests: XCTestCase {
         for bad in ["..", ".", "...", "  ..  ", ""] { XCTAssertEqual(sanitizeFileName(bad), "Untitled", bad) }
         XCTAssertEqual(sanitizeFileName("../x"), "..x")                      // slashes are already removed
         XCTAssertEqual(sanitizeFileName("Raag Yaman"), "Raag Yaman")
+        let long = String(repeating: "य", count: 200)                       // 600 bytes: over the filename limit
+        XCTAssertLessThanOrEqual(sanitizeFileName(long).utf8.count, 200)
     }
 
     func testOnlyTheFirstAccountOnAMacIsOfferedTheOldLibrary() throws {
